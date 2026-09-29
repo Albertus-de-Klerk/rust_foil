@@ -20,18 +20,20 @@ OUT="$ROOT/reference-build"
 FFLAGS_ORIG="-O2 -std=legacy -fno-automatic -finit-local-zero -fno-align-commons -fdefault-real-8 -mtune=generic -flto"
 
 build_variant() {
-  local name="$1" fflags="$2" patchdir="${3:-}"
+  local name="$1" fflags="$2"; shift 2
+  local patchdirs=("$@")
   local dir="$OUT/$name"
   rm -rf "$dir"
   cp -r "$SRC" "$dir"
   chmod -R u+w "$dir"
 
-  if [[ -n "$patchdir" ]]; then
-    for p in "$patchdir"/*.patch; do
+  local pd p
+  for pd in "${patchdirs[@]}"; do
+    for p in "$pd"/*.patch; do
       [[ -e "$p" ]] || continue
       patch -d "$dir" -p1 --quiet < "$p"
     done
-  fi
+  done
 
   # plot stubs (see header)
   ( cd "$dir/plotlib"
@@ -50,7 +52,7 @@ build_variant() {
     gfortran --version | head -1
     echo "FFLAGS: $fflags"
     echo "LDFLAGS: -flto"
-    echo "patches: ${patchdir:-none}"
+    echo "patches: ${patchdirs[*]:-none}"
   } > "$dir/BUILD_INFO.txt"
   echo "built $dir/bin/qfoil"
 }
@@ -66,6 +68,9 @@ for v in $variants; do
     qfoil-auto) build_variant qfoil-auto \
                   "-O2 -std=legacy -fautomatic -finit-real=snan -finit-integer=-99999999 -fno-align-commons -fdefault-real-8 -mtune=generic -flto" \
                   "$ROOT/tools/patches/dump" ;;
+    # experiment: PORTING_PLAN S1, MRCHDU relaxation capped at 0.7 (not the reference)
+    qfoil-s1cap) build_variant qfoil-s1cap "$FFLAGS_ORIG" \
+                  "$ROOT/tools/patches/dump" "$ROOT/tools/patches/experiments/s1" ;;
     *) echo "unknown variant $v" >&2; exit 2 ;;
   esac
 done

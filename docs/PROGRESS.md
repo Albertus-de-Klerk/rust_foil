@@ -31,23 +31,23 @@
 | naca0020 | 53/61 | 59/61 | 61/61 |
 | naca4412 | 53/61 | 55/61 | 59/61 |
 | du91w2250 | 23/61 | 61/61 | 57/61 |
-| e387 | 31/61 | 23/61 | 34/61 |
+| e387 (160 nodes) | 34/61 | 42/61 | 52/61 |
 
-Unconverged α are listed per case by `tools/golden_summary.sh`. E387 is the file from `runs/` with only
-61 points, and `LOAD` does not re-panel, so this case runs on 61 panel nodes (open question Q3).
+Unconverged α are listed per case by `tools/golden_summary.sh`.
 
 ## Next
 
 Phase 2, step 1: create the Cargo workspace (`qfoil-core`, `qfoil-cli`) and port `spline` +
 `geometry` (+ NACA4/5, .dat parsing), tested against `dumps/*/…_pangen.txt` (XB, YB, SB, X, Y, S, XP, YP).
 
-## Open questions (awaiting decision)
+## Decisions (2026-09-29)
 
-* **Q1 (S10).** QFoil 0.9 cannot sweep α within one session (NaN after the first point), and QBlade runs one process per α. Proposal: `analyse_polar` computes each α independently (bit-parity with QBlade's usage), which makes the Phase 4 warm-start requirement moot. Parallelism becomes per-point.
-* **Q2 (S1).** MRCHDU relaxation can exceed 0.7 when 0.3 < DMAX < 0.43. Port as is?
-* **Q3.** E387 golden case uses the raw 61-point file as panels. Keep it (it mirrors QBlade loading a coarse file), or re-panel (`PANE`, 160 nodes) and/or add a finer E387 file?
-* **Q4.** Full intermediate dumps are 176 MB and are gitignored (regenerable in about a minute). Commit them instead, or commit a trimmed subset?
-* **Q5.** Approve the additional `OperatingPoint` struct (PORTING_PLAN §4).
+* **Q1.** Independent α points (QBlade semantics). There's no warm start, and the sweep parallelises per point.
+* **Q2.** MRCHDU relaxation cap tested and **not beneficial** (740 → 741 converged, scattered +22/−21). Ported as in the reference.
+* **Q3.** E387 golden case now uses a 160-node re-panelled file: convergence 88 → 128 of 183 points.
+* **Q4.** Full dumps gitignored. A trimmed fixture set (~9 MB) is committed for the default test run, and `--ignored` tests use the full dumps.
+* **Q5.** `OperatingPoint` struct approved.
+* **Q6.** Git repository initialised.
 
 ## Known deviations of the Rust port from the reference
 

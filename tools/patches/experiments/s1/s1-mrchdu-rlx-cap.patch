@@ -1,0 +1,12 @@
+diff -ruN a/src/xbl.f b/src/xbl.f
+--- a/src/xbl.f	2026-09-29 13:08:34.073957064 +0100
++++ b/src/xbl.f	2026-09-29 13:08:34.147744048 +0100
+@@ -1073,7 +1073,7 @@
+ C          RLX = 1.0
+           RLX = 0.7
+ C---END QFOIL MOD---
+-          IF(DMAX.GT.0.3) RLX = 0.3/DMAX
++          IF(DMAX.GT.0.3) RLX = MIN(RLX, 0.3/DMAX)
+ C
+ C-------- update as usual
+           IF(IBL.LT.ITRAN(IS)) AMI = AMI + RLX*VSREZ(1)

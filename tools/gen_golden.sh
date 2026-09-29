@@ -140,6 +140,32 @@ full_dump() {
   cp "$dir/cmd.txt" "$OUT/dumps/$name/cmd.txt"
 }
 
+# ---------------------------------------------------------------- committed fixtures
+# Trimmed copies of selected full dumps: every single-stage record plus the Newton
+# iterations 1, 2 and last (setbl/blsolv/update/iter). The default `cargo test` uses these.
+# Full dumps (tests/golden/dumps/, gitignored) serve the `--ignored` tests.
+FIXTURES=(naca0012_re1e6_a5.0 naca4412_re1e6_a5.0)
+make_fixtures() {
+  local p src dst f tag k n
+  for p in "${FIXTURES[@]}"; do
+    src="$OUT/dumps/$p"; dst="$OUT/fixtures/$p"
+    [[ -d "$src" ]] || continue
+    rm -rf "${dst:?}"; mkdir -p "$dst"
+    cp "$src/cmd.txt" "$dst/"
+    n=$(ls "$src"/*_setbl.txt | wc -l)
+    for tag in setbl blsolv update iter; do
+      k=0
+      for f in $(ls "$src"/*_"$tag".txt); do
+        k=$((k+1))
+        [[ $k == 1 || $k == 2 || $k == "$n" ]] && cp "$f" "$dst/"
+      done
+    done
+    for f in "$src"/*.txt; do
+      case "$f" in *_setbl.txt|*_blsolv.txt|*_update.txt|*_iter.txt|*/cmd.txt) ;; *) cp "$f" "$dst/" ;; esac
+    done
+  done
+}
+
 # ---------------------------------------------------------------- assemble
 val() {  # $1=file $2=record-name  -> scalar value
   awk -v n="$2" '($1=="#S"||$1=="#I") && $2==n {print $3; exit}' "$1"
@@ -198,6 +224,7 @@ assemble() {
 # ---------------------------------------------------------------- main
 if [[ "${1:-}" == "--point" ]]; then shift; point "$@"; exit 0; fi
 if [[ "${1:-}" == "--fulldump" ]]; then shift; full_dump "$@"; exit 0; fi
+if [[ "${1:-}" == "--fixtures" ]]; then make_fixtures; exit 0; fi
 
 for b in "$BIN_PLAIN" "$BIN_DUMP" "$BIN_AUTO"; do
   [[ -x "$b" ]] || { echo "missing $b: run tools/build_reference.sh" >&2; exit 1; }
@@ -222,6 +249,7 @@ printf '%s\n' "${jobs[@]}" | xargs -P "$(nproc)" -L 1 bash "$0" --point
 for fd in "${FULL_DUMPS[@]}"; do bash "$0" --fulldump $fd; done
 
 assemble
+make_fixtures
 {
   echo "generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "quick: $QUICK"

@@ -35,7 +35,8 @@ Provenance
 
 Test data
 ---------
-* tests/golden/airfoils/e387.dat: from the XFOIL/QFOIL distribution (runs/e387.dat).
+* tests/golden/airfoils/e387.dat: runs/e387.dat from the XFOIL/QFOIL distribution,
+  re-panelled to 160 nodes by QFOIL (PANE) and saved.
 * tests/golden/airfoils/du91w2250.dat: DU 91-W2-250 coordinates ("DU25_A17", as used
   in the NREL 5 MW reference turbine), extracted from the NREL_5MW_Blade.qpr sample
   project shipped with QBlade CE 2.0.9.7.

@@ -25,7 +25,7 @@ PACC pol.txt / ALFA <a> / CPWR cp.txt / DUMP bl.txt / QUIT
 |---|---|
 | naca0012, naca0020, naca4412 | built-in `NACA` |
 | du91w2250 | `airfoils/du91w2250.dat`: DU 91-W2-250 ("DU25_A17", 399 pts), extracted from the NREL 5MW sample project in the QBlade CE 2.0.9.7 package (`SampleProjects/NREL_5MW_Blade.qpr`). t/c = 0.2500 at x = 0.32. |
-| e387 | `airfoils/e387.dat`: Eppler 387, from `reference/qfoil/runs/e387.dat` |
+| e387 | `airfoils/e387.dat`: Eppler 387, **160 nodes**: the 61-point `reference/qfoil/runs/e387.dat` re-panelled by QFoil itself (`LOAD`, `PPAR N 160`, `SAVE`, i.e. PANGEN with default bunching). It converges on 128/183 points against 88/183 for the raw 61-point file (200 nodes: 126, 280 nodes: 114). |
 
 Re ∈ {1e5, 1e6, 5e6}; α = −10 … 20 step 0.5 (61 points). 915 points in total.
 
@@ -36,7 +36,8 @@ Re ∈ {1e5, 1e6, 5e6}; α = −10 … 20 step 0.5 (61 points). 915 points in to
 | `polars/<case>_re<Re>.tsv` | **Primary comparison data.** One row per α: `converged` (QFoil `LVCONV`), `niter` (Newton iterations, = ITER limit if unconverged), CL, CD, CDp, CM, CDf, Xtr_top, Xtr_bot, rmsbl. Values are the dump build's `final` record at full precision (17 significant digits), also for unconverged points. `NA` = no record (process died). |
 | `polars/<case>_re<Re>.pol` | Converged points in QFoil's own polar-file format (from `PACC`), concatenated in α order. This is the format the CLI must reproduce. |
 | `points/<case>_re<Re>/a<α>/` | For α ∈ {0, 5, 10, 15}: `cp.txt` (CPWR), `bl.txt` (DUMP), `viscal_end.txt` (full-precision BL arrays incl. CTAU, see the format below), `stdout_tail.log`. |
-| `dumps/<name>/NNNNN_<tag>.txt` | Full intermediate state for selected points: `pangen`, `aij_raw`, `ggcalc`, `specal`, `xywake`, `qdcalc`, `viscal_init`, `mrchue`, `setbl`/`blsolv`/`update`/`iter` per Newton iteration, `viscal_end`, `final`. NNNNN is call order. `*_vm` holds `setbl` with the full VM block. |
+| `dumps/<name>/NNNNN_<tag>.txt` | **Gitignored** (~180 MB, regenerate with `tools/gen_golden.sh`). Used by `cargo test -- --ignored`. Full intermediate state for selected points: `pangen`, `aij_raw`, `ggcalc`, `specal`, `xywake`, `qdcalc`, `viscal_init`, `mrchue`, `setbl`/`blsolv`/`update`/`iter` per Newton iteration, `viscal_end`, `final`. NNNNN is call order. `*_vm` holds `setbl` with the full VM block. |
+| `fixtures/<name>/` | **Committed**, trimmed copies of two full dumps (naca0012 and naca4412, Re 1e6, α 5): all single-stage records plus Newton iterations 1, 2 and last. Used by the default `cargo test`. |
 | `checks.tsv` | Per point: printed iterations, `VISCAL: Convergence failed` count, NaN line count, and three bit-identity checks: plain vs dump build stdout, dump vs `-fautomatic` build final record (SAVE-dependence probe), plain build vs QBlade's shipped `QFoil` stdout. |
 
 ## Dump record format

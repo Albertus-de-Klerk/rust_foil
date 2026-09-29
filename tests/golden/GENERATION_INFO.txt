@@ -1,4 +1,4 @@
-generated: 2026-09-28T20:36:24Z
+generated: 2026-09-29T12:19:21Z
 quick: 0
 itmax: 100  ncrit: 9
 --- qfoil
