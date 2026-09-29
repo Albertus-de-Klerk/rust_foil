@@ -1,0 +1,41 @@
+qfoil-rs: a Rust port of QFOIL 0.9
+
+This software is a derivative work (a translation into Rust) of QFOIL 0.9, which is
+itself a modified version of XFOIL 6.99.
+
+  XFOIL 6.99
+    Copyright (C) 2000  Mark Drela, Harold Youngren
+    https://web.mit.edu/drela/Public/web/xfoil/
+
+  QFOIL 0.9 modifications
+    Copyright (C) 2026  David Marten
+    Distributed with QBlade Community Edition 2.0.9.7 (Binaries/Qfoil_0.9_minimal_src.zip)
+    https://qblade.org/
+
+Both XFOIL and QFOIL are licensed under the GNU General Public License, version 2 or
+(at your option) any later version, as stated in the original source headers:
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+This port is distributed under the same terms (GPL-2.0-or-later). See LICENSE.
+
+Provenance
+----------
+* Ported from reference/qfoil/src/*.f (QFOIL 0.9). XFOIL 6.99 source from the same
+  package (reference/xfoil-6.99/) and the upstream MIT release were used only to
+  identify the QFOIL modifications (docs/PORTING_PLAN.md, section 5).
+* No code from other XFOIL ports was used.
+* Rust items carry "Port of XFOIL/QFoil <ROUTINE>" doc comments naming the Fortran
+  routine they translate.
+* QBlade itself (Academic Public License) is not part of this work. Only the separately
+  GPL-licensed QFOIL component is used.
+
+Test data
+---------
+* tests/golden/airfoils/e387.dat: from the XFOIL/QFOIL distribution (runs/e387.dat).
+* tests/golden/airfoils/du91w2250.dat: DU 91-W2-250 coordinates ("DU25_A17", as used
+  in the NREL 5 MW reference turbine), extracted from the NREL_5MW_Blade.qpr sample
+  project shipped with QBlade CE 2.0.9.7.

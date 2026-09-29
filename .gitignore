@@ -1,0 +1,7 @@
+/target/
+# out-of-tree reference builds and scratch (tools/build_reference.sh, tools/gen_golden.sh)
+/reference-build/
+# full intermediate dumps: ~176 MB, deterministic, regenerate with tools/gen_golden.sh
+/tests/golden/dumps/
+# original QBlade package (62 MB); the extracted sources in reference/ are kept
+/reference/*.zip

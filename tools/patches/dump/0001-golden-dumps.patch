@@ -1,0 +1,387 @@
+diff -ruN a/bin/Makefile b/bin/Makefile
+--- a/bin/Makefile	2026-09-28 21:21:46.720598423 +0100
++++ b/bin/Makefile	2026-09-28 21:23:41.759014075 +0100
+@@ -41,7 +41,7 @@
+ XFOILOBJ = xfoil.o xpanel.o xoper.o xtcam.o xgdes.o xqdes.o xmdes.o \
+ xsolve.o xbl.o xblsys.o xpol.o xplots.o pntops.o xgeom.o xutils.o modify.o \
+ blplot.o polplt.o aread.o naca.o spline.o plutil.o iopol.o gui.o sort.o \
+-dplot.o profil.o
++dplot.o profil.o dump.o
+ 
+ PPLOTOBJ = pplot.o polplt.o sort.o iopol.o
+ PXPLOTOBJ = pxplot.o plutil.o gui.o
+diff -ruN a/src/dump.f b/src/dump.f
+--- a/src/dump.f	1970-01-01 01:00:00.000000000 +0100
++++ b/src/dump.f	2026-09-28 21:26:19.717126408 +0100
+@@ -0,0 +1,258 @@
++C=====================================================================
++C     qfoil-rs golden-dump instrumentation.  NOT part of QFoil.
++C
++C     Active only if environment variable QFOIL_DUMP is set to an
++C     existing directory.  Every call writes  <dir>/<seq>_<tag>.txt
++C     (seq = 5-digit call counter).  Reads COMMON state only; has no
++C     effect on the solution.
++C
++C     Record format (one value per line, ES26.17E3 = round-trip f64):
++C       #TAG tag
++C       #S name  value          real scalar
++C       #I name  value          integer scalar
++C       #R name  n              real vector, n lines follow
++C       #V name  n              integer vector, n lines follow
++C       #M name  nr nc          real matrix, nr*nc lines, column-major
++C     BL arrays are written per side with suffix 1 / 2, length NBL(is).
++C     If QFOIL_DUMP_VM is set, SETBL dumps also include the full VM block.
++C     If QFOIL_DUMP_TAGS=',a,b,' is set, only those tags are written.
++C=====================================================================
++      SUBROUTINE QDUMP(TAG,KITER)
++      INCLUDE 'XFOIL.INC'
++      CHARACTER*(*) TAG
++      INTEGER KITER
++      CHARACTER*256 DDIR, VMFLAG, TAGS
++      CHARACTER*320 FNAM
++      INTEGER NSEQ, LD, LVMLEN, ISTAT, JSTAT, KSTAT, LTG, LU, ISHARP
++      INTEGER ICONV
++      LOGICAL LVM
++      SAVE NSEQ
++      DATA NSEQ / 0 /
++C
++      CALL GET_ENVIRONMENT_VARIABLE('QFOIL_DUMP', DDIR, LD, ISTAT)
++      IF(ISTAT.NE.0 .OR. LD.EQ.0) RETURN
++      CALL GET_ENVIRONMENT_VARIABLE('QFOIL_DUMP_VM',VMFLAG,LVMLEN,JSTAT)
++      LVM = JSTAT.EQ.0 .AND. LVMLEN.GT.0
++C
++C---- optional tag filter: QFOIL_DUMP_TAGS=",tag1,tag2,"
++      CALL GET_ENVIRONMENT_VARIABLE('QFOIL_DUMP_TAGS',TAGS,LTG,KSTAT)
++      IF(KSTAT.EQ.0 .AND. LTG.GT.0) THEN
++       IF(INDEX(TAGS(1:LTG), ','//TAG//',') .EQ. 0) RETURN
++      ENDIF
++C
++      NSEQ = NSEQ + 1
++      WRITE(FNAM,'(A,A,I5.5,A,A,A)')
++     &  DDIR(1:LD), '/', NSEQ, '_', TAG, '.txt'
++      LU = 97
++      OPEN(LU,FILE=FNAM,STATUS='UNKNOWN')
++      WRITE(LU,'(A,A)') '#TAG ', TAG
++      CALL DPI(LU,'ITER',KITER)
++      CALL DPI(LU,'N',N)
++      CALL DPI(LU,'NW',NW)
++      CALL DPS(LU,'ALFA',ALFA)
++C
++      IF(TAG.EQ.'pangen') THEN
++       ISHARP = 0
++       IF(SHARP) ISHARP = 1
++       CALL DPI(LU,'SHARP',ISHARP)
++       CALL DPR(LU,'X',X,N)
++       CALL DPR(LU,'Y',Y,N)
++       CALL DPR(LU,'S',S,N)
++       CALL DPR(LU,'XP',XP,N)
++       CALL DPR(LU,'YP',YP,N)
++       CALL DPR(LU,'NX',NX,N)
++       CALL DPR(LU,'NY',NY,N)
++       CALL DPR(LU,'APANEL',APANEL,N)
++       CALL DPS(LU,'SLE',SLE)
++       CALL DPS(LU,'XLE',XLE)
++       CALL DPS(LU,'YLE',YLE)
++       CALL DPS(LU,'XTE',XTE)
++       CALL DPS(LU,'YTE',YTE)
++       CALL DPS(LU,'CHORD',CHORD)
++       CALL DPS(LU,'ANTE',ANTE)
++       CALL DPS(LU,'ASTE',ASTE)
++       CALL DPS(LU,'DSTE',DSTE)
++       CALL DPI(LU,'NB',NB)
++       CALL DPR(LU,'XB',XB,NB)
++       CALL DPR(LU,'YB',YB,NB)
++       CALL DPR(LU,'SB',SB,NB)
++C
++      ELSEIF(TAG.EQ.'aij_raw') THEN
++C----- before LU factorisation: GAMU holds the right-hand sides
++       CALL DPM(LU,'AIJ',AIJ,IQX,N+1,N+1)
++       CALL DPM(LU,'BIJ',BIJ,IQX,N+1,N)
++       CALL DPM(LU,'GAMU',GAMU,IQX,N+1,2)
++C
++      ELSEIF(TAG.EQ.'ggcalc') THEN
++       CALL DPM(LU,'AIJLU',AIJ,IQX,N+1,N+1)
++       CALL DPV(LU,'AIJPIV',AIJPIV,N+1)
++       CALL DPM(LU,'GAMU',GAMU,IQX,N+1,2)
++C
++      ELSEIF(TAG.EQ.'specal') THEN
++       CALL DPR(LU,'GAM',GAM,N)
++       CALL DPR(LU,'GAM_A',GAM_A,N)
++       CALL DPR(LU,'QINV',QINV,N)
++       CALL DPR(LU,'QINV_A',QINV_A,N)
++       CALL DPR(LU,'CPI',CPI,N)
++       CALL DPS(LU,'PSIO',PSIO)
++       CALL DPS(LU,'GAMTE',GAMTE)
++       CALL DPS(LU,'SIGTE',SIGTE)
++       CALL DPS(LU,'CL',CL)
++       CALL DPS(LU,'CM',CM)
++       CALL DPS(LU,'CDP',CDP)
++       CALL DPS(LU,'CL_ALF',CL_ALF)
++       CALL DPS(LU,'CL_MSQ',CL_MSQ)
++       CALL DPS(LU,'MINF',MINF)
++       CALL DPS(LU,'TKLAM',TKLAM)
++C
++      ELSEIF(TAG.EQ.'xywake') THEN
++       CALL DPR(LU,'XW',X(N+1),NW)
++       CALL DPR(LU,'YW',Y(N+1),NW)
++       CALL DPR(LU,'SW',S(N+1),NW)
++       CALL DPR(LU,'NXW',NX(N+1),NW)
++       CALL DPR(LU,'NYW',NY(N+1),NW)
++       CALL DPR(LU,'APANELW',APANEL(N),NW)
++       CALL DPS(LU,'AWAKE',AWAKE)
++C
++      ELSEIF(TAG.EQ.'qdcalc') THEN
++       CALL DPM(LU,'DIJ',DIJ,IZX,N+NW,N+NW)
++       CALL DPM(LU,'QINVU',QINVU,IZX,N+NW,2)
++C
++      ELSEIF(TAG.EQ.'final') THEN
++C----- compact per-point result (full precision polar row)
++       ICONV = 0
++       IF(LVCONV) ICONV = 1
++       CALL DPI(LU,'CONVERGED',ICONV)
++       CALL DPS(LU,'CL',CL)
++       CALL DPS(LU,'CM',CM)
++       CALL DPS(LU,'CD',CD)
++       CALL DPS(LU,'CDF',CDF)
++       CALL DPS(LU,'CDP',CDP)
++       CALL DPR(LU,'XOCTR',XOCTR,2)
++       CALL DPR(LU,'XSSITR',XSSITR,2)
++       CALL DPS(LU,'RMSBL',RMSBL)
++       CALL DPS(LU,'RMXBL',RMXBL)
++       CALL DPS(LU,'RLX',RLX)
++       CALL DPS(LU,'MINF',MINF)
++       CALL DPS(LU,'REINF',REINF)
++       CALL DPR(LU,'ACRIT',ACRIT,2)
++       CALL DPI(LU,'IST',IST)
++       CALL DPV(LU,'NBL',NBL,2)
++       CALL DPV(LU,'ITRAN',ITRAN,2)
++C
++      ELSE
++C----- viscous state (viscal_init, mrchue, setbl, blsolv, update,
++C-     iter, viscal_end)
++       CALL DPI(LU,'IST',IST)
++       CALL DPS(LU,'SST',SST)
++       CALL DPV(LU,'NBL',NBL,2)
++       CALL DPV(LU,'IBLTE',IBLTE,2)
++       CALL DPV(LU,'ITRAN',ITRAN,2)
++       CALL DPI(LU,'NSYS',NSYS)
++       CALL DPR(LU,'XSSITR',XSSITR,2)
++       CALL DPR(LU,'XOCTR',XOCTR,2)
++       CALL DPS(LU,'CL',CL)
++       CALL DPS(LU,'CM',CM)
++       CALL DPS(LU,'CD',CD)
++       CALL DPS(LU,'CDF',CDF)
++       CALL DPS(LU,'CDP',CDP)
++       CALL DPS(LU,'RLX',RLX)
++       CALL DPS(LU,'RMSBL',RMSBL)
++       CALL DPS(LU,'RMXBL',RMXBL)
++       CALL DPR(LU,'WGAP',WGAP,NW)
++       CALL DPBLI(LU,'IPAN',IPAN,NBL(1),NBL(2))
++       CALL DPBLI(LU,'ISYS',ISYS,NBL(1),NBL(2))
++       CALL DPBL(LU,'VTI',VTI,NBL(1),NBL(2))
++       CALL DPBL(LU,'XSSI',XSSI,NBL(1),NBL(2))
++       CALL DPBL(LU,'UINV',UINV,NBL(1),NBL(2))
++       CALL DPBL(LU,'UINV_A',UINV_A,NBL(1),NBL(2))
++       CALL DPBL(LU,'UEDG',UEDG,NBL(1),NBL(2))
++       CALL DPBL(LU,'THET',THET,NBL(1),NBL(2))
++       CALL DPBL(LU,'DSTR',DSTR,NBL(1),NBL(2))
++       CALL DPBL(LU,'CTAU',CTAU,NBL(1),NBL(2))
++       CALL DPBL(LU,'MASS',MASS,NBL(1),NBL(2))
++       CALL DPBL(LU,'TAU',TAU,NBL(1),NBL(2))
++       CALL DPBL(LU,'DIS',DIS,NBL(1),NBL(2))
++       CALL DPBL(LU,'CTQ',CTQ,NBL(1),NBL(2))
++       CALL DPBL(LU,'DELT',DELT,NBL(1),NBL(2))
++       CALL DPBL(LU,'TSTR',TSTR,NBL(1),NBL(2))
++       IF(TAG.EQ.'setbl' .OR. TAG.EQ.'blsolv') THEN
++        CALL DPM(LU,'VA',VA,6,6,NSYS)
++        CALL DPM(LU,'VB',VB,6,6,NSYS)
++        CALL DPM(LU,'VDEL',VDEL,6,6,NSYS)
++        IF(LVM) CALL DPM(LU,'VM',VM,3*IZX,3*NSYS,NSYS)
++       ENDIF
++       IF(TAG.EQ.'viscal_end') THEN
++        CALL DPR(LU,'QVIS',QVIS,N+NW)
++        CALL DPR(LU,'CPV',CPV,N+NW)
++        CALL DPR(LU,'CPI',CPI,N+NW)
++       ENDIF
++      ENDIF
++C
++      CLOSE(LU)
++      RETURN
++      END
++
++
++      SUBROUTINE DPS(LU,NAME,V)
++      CHARACTER*(*) NAME
++      WRITE(LU,'(A,A,1X,ES26.17E3)') '#S ', NAME, V
++      RETURN
++      END
++
++      SUBROUTINE DPI(LU,NAME,IV)
++      CHARACTER*(*) NAME
++      WRITE(LU,'(A,A,1X,I12)') '#I ', NAME, IV
++      RETURN
++      END
++
++      SUBROUTINE DPR(LU,NAME,A,NN)
++      CHARACTER*(*) NAME
++      DIMENSION A(*)
++      WRITE(LU,'(A,A,1X,I8)') '#R ', NAME, NN
++      DO 10 I=1, NN
++        WRITE(LU,'(ES26.17E3)') A(I)
++   10 CONTINUE
++      RETURN
++      END
++
++      SUBROUTINE DPV(LU,NAME,IA,NN)
++      CHARACTER*(*) NAME
++      DIMENSION IA(*)
++      WRITE(LU,'(A,A,1X,I8)') '#V ', NAME, NN
++      DO 10 I=1, NN
++        WRITE(LU,'(I12)') IA(I)
++   10 CONTINUE
++      RETURN
++      END
++
++      SUBROUTINE DPM(LU,NAME,A,LDA,NR,NC)
++      CHARACTER*(*) NAME
++      DIMENSION A(LDA,*)
++      WRITE(LU,'(A,A,1X,2I8)') '#M ', NAME, NR, NC
++      DO 20 J=1, NC
++        DO 10 I=1, NR
++          WRITE(LU,'(ES26.17E3)') A(I,J)
++   10   CONTINUE
++   20 CONTINUE
++      RETURN
++      END
++
++      SUBROUTINE DPBL(LU,CNAM,A,NB1,NB2)
++C---- BL array A(IVX,2): side 1 then side 2, each of its own length
++      INCLUDE 'XFOIL.INC'
++      CHARACTER*(*) CNAM
++      DIMENSION A(IVX,2)
++      CALL DPR(LU,CNAM//'1',A(1,1),NB1)
++      CALL DPR(LU,CNAM//'2',A(1,2),NB2)
++      RETURN
++      END
++
++      SUBROUTINE DPBLI(LU,CNAM,IA,NB1,NB2)
++      INCLUDE 'XFOIL.INC'
++      CHARACTER*(*) CNAM
++      DIMENSION IA(IVX,2)
++      CALL DPV(LU,CNAM//'1',IA(1,1),NB1)
++      CALL DPV(LU,CNAM//'2',IA(1,2),NB2)
++      RETURN
++      END
+diff -ruN a/src/xbl.f b/src/xbl.f
+--- a/src/xbl.f	2026-09-28 21:21:46.722528531 +0100
++++ b/src/xbl.f	2026-09-28 21:23:41.758939101 +0100
+@@ -85,6 +85,7 @@
+        WRITE(*,*) 'Initializing BL ...'
+        CALL MRCHUE
+        LBLINI = .TRUE.
++      CALL QDUMP('mrchue',0)
+       ENDIF
+ C
+       WRITE(*,*)
+@@ -512,6 +513,7 @@
+ C---- next airfoil side
+  2000 CONTINUE
+ C
++      CALL QDUMP('setbl',0)
+       RETURN
+       END
+ 
+diff -ruN a/src/xfoil.f b/src/xfoil.f
+--- a/src/xfoil.f	2026-09-28 21:21:46.722679147 +0100
++++ b/src/xfoil.f	2026-09-28 21:23:29.371245375 +0100
+@@ -2166,6 +2166,7 @@
+      &       /'   Top    side refined area x/c limits ' , 2F6.3
+      &       /'   Bottom side refined area x/c limits ' , 2F6.3)
+ C
++      CALL QDUMP('pangen',0)
+       RETURN
+       END ! PANGEN
+ 
+diff -ruN a/src/xoper.f b/src/xoper.f
+--- a/src/xoper.f	2026-09-28 21:21:46.722930961 +0100
++++ b/src/xoper.f	2026-09-28 21:26:19.717401927 +0100
+@@ -2834,6 +2834,7 @@
+       ENDIF
+       IF(LFLAP) CALL MHINGE
+ C
++      CALL QDUMP('specal',0)
+       RETURN
+       END ! SPECAL
+  
+@@ -2991,6 +2992,7 @@
+ C---END QFOIL MOD---
+ 
+ C
++      CALL QDUMP('viscal_init',0)
+       IF(LVCONV) THEN
+ C----- set correct CL if converged point exists
+        CALL QVFUE
+@@ -3020,9 +3022,11 @@
+ C
+ C------ solve Newton system with custom solver
+         CALL BLSOLV
++        CALL QDUMP('blsolv',ITER)
+ C
+ C------ update BL variables
+         CALL UPDATE
++        CALL QDUMP('update',ITER)
+ C
+         IF(LALFA) THEN
+ C------- set new freestream Mach, Re from new CL
+@@ -3047,6 +3051,7 @@
+         CALL CLCALC(N,X,Y,GAM,GAM_A,ALFA,MINF,QINF, XCMREF,YCMREF,
+      &              CL,CM,CDP,CL_ALF,CL_MSQ)
+         CALL CDCALC
++        CALL QDUMP('iter',ITER)
+ C
+ C------ display changes and test for convergence
+         IF(RLX.LT.1.0) 
+@@ -3071,6 +3076,8 @@
+    90 CONTINUE
+       CALL CPCALC(N+NW,QINV,QINF,MINF,CPI)
+       CALL CPCALC(N+NW,QVIS,QINF,MINF,CPV)
++      CALL QDUMP('viscal_end',ITER)
++      CALL QDUMP('final',ITER)
+       IF(LFLAP) CALL MHINGE
+ 
+ 
+diff -ruN a/src/xpanel.f b/src/xpanel.f
+--- a/src/xpanel.f	2026-09-28 21:21:46.722997164 +0100
++++ b/src/xpanel.f	2026-09-28 21:23:29.373356221 +0100
+@@ -1103,6 +1103,7 @@
+ C
+       ENDIF
+ C
++      CALL QDUMP('aij_raw',0)
+ C---- LU-factor coefficient matrix AIJ
+       CALL LUDCMP(IQX,N+1,AIJ,AIJPIV)
+       LQAIJ = .TRUE.
+@@ -1118,6 +1119,7 @@
+    50 CONTINUE
+ C
+       LGAMU = .TRUE.
++      CALL QDUMP('ggcalc',0)
+ C
+       RETURN
+       END
+@@ -1262,6 +1264,7 @@
+    90 CONTINUE
+ C
+       LWDIJ = .TRUE.
++      CALL QDUMP('qdcalc',0)
+ C
+       RETURN
+       END
+@@ -1345,6 +1348,7 @@
+ C---- set wake presence flag and corresponding alpha
+       LWAKE = .TRUE.
+       AWAKE =  ALFA
++      CALL QDUMP('xywake',0)
+ C
+ C---- old source influence matrix is invalid for the new wake geometry
+       LWDIJ = .FALSE.

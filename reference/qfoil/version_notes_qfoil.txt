@@ -1,0 +1,223 @@
+============================================================
+ QFOIL - Version Notes
+============================================================
+
+Product name:
+  QFOIL
+
+Current version:
+  QFOIL 0.9
+
+Base code:
+  XFOIL Version 6.99
+  Copyright (C) 2000
+  Mark Drela, Harold Youngren
+
+QFOIL modifications:
+  Copyright (C) 2026
+  David Marten
+
+License:
+  GNU General Public License (GPL), as inherited from XFOIL.
+  This software is provided WITHOUT ANY WARRANTY; see GPL for details.
+
+------------------------------------------------------------
+ 1. Purpose and Scope
+------------------------------------------------------------
+
+QFOIL is a modified derivative of XFOIL 6.99 with the goal of improving
+robustness and physical realism of viscous wake and post-stall predictions.
+
+The implemented changes are inspired by concepts commonly attributed to
+RFOIL / ECN-RFOIL, particularly regarding:
+  - wake dissipation behavior,
+  - shear-lag modeling,
+  - drag evaluation in separated flow.
+
+QFOIL currently supports:
+  - command-line (CLI) operation,
+  - angle-of-attack (ALFA) sweep analysis.
+
+GUI operation and interactive geometry editing are not supported.
+
+------------------------------------------------------------
+ 2. Summary of Key Modifications vs. XFOIL 6.99
+------------------------------------------------------------
+
+The following changes distinguish QFOIL from standard XFOIL:
+
+  * Dynamic shear-lag coefficient dependent on boundary-layer shape factor
+  * Increased wake dissipation for wake flow regions
+  * Reduced solver iteration limits and relaxation factors for stability
+  * Forced inviscid initialization and suction peak clamping during alpha steps
+  * Wake-corrected drag extrapolation with fallback logic
+  * New user-exposed wake correction parameter (GWAKE)
+  * Updated startup banner and identification
+
+Each item is described in more detail below.
+
+------------------------------------------------------------
+ 3. Dynamic Shear-Lag Model (RFOIL-Inspired)
+------------------------------------------------------------
+
+In standard XFOIL, the shear-lag coefficient SCC is constant.
+
+In QFOIL, SCC is replaced by a shape-factor-dependent formulation:
+
+  Kc = 4.65 - 0.95 * tanh( f(Hk) )
+
+where Hk is the local boundary-layer shape factor.
+
+Key characteristics:
+  - High Kc in attached flow
+  - Reduced Kc in separated flow
+  - Smooth transition between regimes
+
+The derivative of Kc with respect to Hk is included consistently in the
+Newton linearization to maintain solver robustness near stall.
+
+Effect:
+  - Delayed and smoother stall onset
+  - Improved convergence behavior in separation
+  - Lift curves closer to RFOIL-style predictions
+
+------------------------------------------------------------
+ 4. Modified Wake Dissipation Length
+------------------------------------------------------------
+
+For wake flow regions, the equilibrium dissipation length is modified:
+
+  XFOIL:  ALD = DLCON
+  QFOIL:  ALD = DLCON / 4.0
+
+This increases wake dissipation and effectively strengthens equilibrium
+shear stress in the wake.
+
+Effect:
+  - Faster wake relaxation
+  - Reduced sensitivity to wake length
+  - Improved numerical stability in post-stall conditions
+
+------------------------------------------------------------
+ 5. Solver Iteration Limits and Relaxation
+------------------------------------------------------------
+
+QFOIL introduces tighter controls on the Newton solver updates to prevent
+divergence during highly separated flow conditions:
+
+  - The under-relaxation factor (RLX) is reduced from 1.0 to 0.7.
+  - The maximum allowable lift coefficient (CL) change per iteration is 
+    reduced from +/- 0.5 to +/- 0.15.
+
+Effect:
+  - Prevents the solver from taking excessively large steps into unphysical states.
+  - Slower but more robust convergence characteristics during deep stall.
+
+------------------------------------------------------------
+ 6. Alpha Step Initialization and Clamping
+------------------------------------------------------------
+
+To improve robustness during ALFA sweeps, QFOIL modifies how the boundary 
+layer edge velocities (Ue) are initialized for each new angle of attack:
+
+  1. The solver always resets to the inviscid velocity distribution (Uinv) 
+     for every alpha step, forcing a fresh start rather than relying on the 
+     previous angle's wake.
+  2. If a massive suction peak is detected (Uinv > 2.0) indicating impossible 
+     attached flow, the velocity is clamped to 2.0 to provide a safe 
+     "Separated" starting guess.
+  3. The amplification factor is reset to the default attached value (0.01) 
+     to clear "bad memory" from previous failed angles.
+
+Effect:
+  - Significantly fewer cascading failures during ALFA sweeps.
+  - Better recovery when stepping into and out of post-stall conditions.
+
+------------------------------------------------------------
+ 7. Wake-Corrected Drag Extrapolation
+------------------------------------------------------------
+
+The standard XFOIL Squire-Young wake extrapolation for drag is extended.
+
+For cases where the wake edge velocity ratio satisfies:
+
+  Ue_wake / U_inf <= 1
+
+QFOIL applies a wake-based correction to the wake momentum thickness
+before computing drag.
+
+A new parameter, GWAKE, controls the strength of this correction.
+
+In deep stall or untrustworthy wake states, QFOIL automatically falls
+back to the original XFOIL drag formulation to preserve robustness.
+
+Effect:
+  - Improved drag prediction near stall
+  - Reduced unphysical drag excursions
+  - Controlled behavior in deep separation
+
+------------------------------------------------------------
+ 8. New User-Exposed Parameter: GWAKE
+------------------------------------------------------------
+
+A new wake correction factor is introduced:
+
+  GWAKE
+
+Default value:
+  GWAKE = 0.40
+
+CLI command:
+  GW r    Change wake correction factor
+
+GWAKE directly influences wake-based drag correction and allows the
+user to tune wake growth and dissipation behavior.
+
+------------------------------------------------------------
+ 9. Output and Interface Changes
+------------------------------------------------------------
+
+  - GWAKE is included in operating-condition summaries.
+  - Startup banner clearly identifies QFOIL as a derivative of XFOIL.
+  - Copyright attribution for QFOIL modifications is explicitly stated.
+  - Boundary layer writing output logic (.bl files) has been disabled/commented out.
+
+------------------------------------------------------------
+10. Expected Behavioral Differences vs. XFOIL
+------------------------------------------------------------
+
+Compared to standard XFOIL 6.99, users should expect:
+
+  - Later and smoother stall onset
+  - Improved convergence in separated flow
+  - Stronger wake dissipation
+  - More stable drag prediction near and beyond stall
+  - Slightly different deep-stall behavior due to wake fallback logic
+
+------------------------------------------------------------
+11. Relation to RFOIL / ECN-RFOIL
+------------------------------------------------------------
+
+QFOIL is not a line-by-line reproduction of RFOIL or ECN-RFOIL.
+
+Instead, it adopts several key ideas commonly associated with those
+codes, including:
+  - shape-factor-dependent shear-lag,
+  - increased wake dissipation.
+
+Some implementation choices intentionally differ and may lead to
+quantitative differences, especially in deep stall.
+
+------------------------------------------------------------
+12. Disclaimer
+------------------------------------------------------------
+
+QFOIL is provided as-is, without any warranty of correctness,
+merchantability, or fitness for a particular purpose.
+
+Users are responsible for validating results for their specific
+applications.
+
+============================================================
+ End of version_notes_qfoil.txt
+============================================================

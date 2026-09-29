@@ -1,0 +1,253 @@
+
+ ===================================================
+  QFOIL Version 0.9, based on XFOIL Version 6.99
+  XFOIL
+  Copyright (C) 2000   Mark Drela, Harold Youngren
+  QFOIL
+  Copyright (C) 2026   David Marten
+ 
+  This version is inspired by RFOIL-style
+  shear-lag and wake dissipation models.
+  Currently supported operation:
+    - CLI-based ALFA sweeps
+ 
+
+  This software comes with ABSOLUTELY NO WARRANTY,
+    subject to the GNU General Public License.
+ ===================================================
+
+ File  xfoil.def  not found
+
+   QUIT    Exit program
+
+  .OPER    Direct operating point(s)
+  .MDES    Complex mapping design routine
+  .QDES    Surface speed design routine
+  .GDES    Geometry design routine
+
+   SAVE f  Write airfoil to labeled coordinate file
+   PSAV f  Write airfoil to plain coordinate file
+   ISAV f  Write airfoil to ISES coordinate file
+   MSAV f  Write airfoil to MSES coordinate file
+   REVE    Reverse written-airfoil node ordering
+   DELI i  Change written-airfoil file delimiters
+
+   LOAD f  Read buffer airfoil from coordinate file
+   NACA i  Set NACA 4,5-digit airfoil and buffer airfoil
+   INTE    Set buffer airfoil by interpolating two airfoils
+   NORM    Buffer airfoil normalization toggle
+   HALF    Halve the number of points in buffer airfoil
+   XYCM rr Change CM reference location, currently  0.25000 0.00000
+
+   BEND    Display structural properties of current airfoil
+
+   PCOP    Set current-airfoil panel nodes directly from buffer airfoil points
+   PANE    Set current-airfoil panel nodes ( 160 ) based on curvature
+  .PPAR    Show/change paneling
+
+  .PLOP    Plotting options
+
+   WDEF f  Write  current-settings file
+   RDEF f  Reread current-settings file
+   NAME s  Specify new airfoil name
+   NINC    Increment name version number
+
+   Z       Zoom    | (available in all menus)
+   U       Unzoom  | 
+
+ XFOIL   c>   ...............................................
+
+  G raphics-enable flag:        T
+  S ize of plot object          10.00"
+  A spect ratio of plot object   0.5500
+  P age dimensions              11.00 x  8.50"
+  M argins from page edges       0.00",  0.00"
+  F ont size (relative)          0.0150
+  W indow/screen size fraction   0.8000
+  B lowup input method:        Cursor    
+  O rientation of plot:        Landscape 
+  C olor PostScript output?     T
+  L ine colors for top,bottom    8  3
+
+      Option, Value   (or <Return>)    c>   ...............................................
+
+  G raphics-enable flag:        F
+  S ize of plot object          10.00"
+  A spect ratio of plot object   0.5500
+  P age dimensions              11.00 x  8.50"
+  M argins from page edges       0.00",  0.00"
+  F ont size (relative)          0.0150
+  W indow/screen size fraction   0.8000
+  B lowup input method:        Cursor    
+  O rientation of plot:        Landscape 
+  C olor PostScript output?     T
+  L ine colors for top,bottom    8  3
+
+      Option, Value   (or <Return>)    c>  
+ XFOIL   c>  
+ Labeled airfoil file.  Name:  E387                                            
+
+ Number of input coordinate points:  61
+ Counterclockwise ordering
+ Max thickness =     0.090706  at x =   0.311
+ Max camber    =     0.037836  at x =   0.401
+
+  LE  x,y  =   0.00019   0.00026  |   Chord =   0.99981
+  TE  x,y  =   1.00000   0.00000  |
+
+ Current airfoil nodes set from buffer airfoil nodes (  61 )
+
+ WARNING: Poor input coordinate distribution
+          Excessive panel angle   52.5  at i =  33
+          Repaneling with PANE and/or PPAR suggested
+           (doing GDES,CADD before repaneling _may_
+            improve excessively coarse LE spacing
+
+ XFOIL   c>  
+.OPERi   c>  
+ Xtr/c     =  1.0000    top    side
+ Xtr/c     =  1.0000    bottom side
+ NcritT    =    9.00   ( 0.070 % turb. level )
+ NcritB    =    9.00   ( 0.070 % turb. level )
+ Vacc      =  0.0100
+ WakeL/c   =   1.000
+
+ Klag  =  5.6000     Uxwt  =    1.00       Kdl  =  0.9000
+ A     =  6.7000     B     =  0.7500       KCt  = 0.01485
+ CtiniK=  1.8000     CtiniX=  3.3000       GWake=  0.4000
+
+..VPAR   c>  
+..VPAR   c>  
+.OPERi   c>  
+.OPERi   c>  
+ M  =    0.0000
+ Re =  0.1000E+06
+
+.OPERv   c>  
+ Polar  1 newly created for accumulation
+ Airfoil archived with polar: E387                                            
+
+Enter  polar save filename  OR  <return> for no file   s>  
+ New polar save file available
+
+Enter  polar dump filename  OR  <return> for no file   s>  
+ Polar dump file will NOT be written
+
+ Polar accumulation enabled
+
+.OPERva   c>   Calculating unit vorticity distributions ...
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Initializing BL ...
+    side            1  ...
+ MRCHUE: Inverse mode at  18     Hk =   4.112
+ MRCHUE: Inverse mode at  19     Hk =   5.137
+ MRCHUE: Inverse mode at  20     Hk =   6.102
+ MRCHUE: Inverse mode at  21     Hk =   7.016
+ MRCHUE: Inverse mode at  22     Hk =   7.881
+ MRCHUE: Inverse mode at  23     Hk =   8.694
+ MRCHUE: Inverse mode at  24     Hk =   9.450
+ MRCHUE: Inverse mode at  25     Hk =   8.719
+ MRCHUE: Inverse mode at  26     Hk =   6.188
+ MRCHUE: Inverse mode at  27     Hk =   4.908
+ MRCHUE: Inverse mode at  28     Hk =   4.096
+ MRCHUE: Inverse mode at  29     Hk =   3.546
+ MRCHUE: Inverse mode at  30     Hk =   3.168
+ MRCHUE: Inverse mode at  31     Hk =   2.915
+ MRCHUE: Inverse mode at  32     Hk =   2.767
+ MRCHUE: Inverse mode at  33     Hk =   2.718
+    side            2  ...
+ MRCHUE: Inverse mode at  27     Hk =   3.800
+ MRCHUE: Inverse mode at  28     Hk =   3.982
+ MRCHUE: Inverse mode at  29     Hk =   4.092
+ MRCHUE: Inverse mode at  30     Hk =   4.128
+
+ Side 1  free  transition at x/c =  0.8099   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+   1   rms: 0.1955E+00   max: -.1442E+01   C at   45  2   RLX: 0.277
+       a =  0.000      CL =  0.4649
+      Cm = -0.1100     CD =  0.01629   =>   CDf =  0.00724    CDp =  0.00905
+
+ Side 1  free  transition at x/c =  0.8073   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+   2   rms: 0.1757E+00   max: -.1606E+01   C at   45  2   RLX: 0.249
+       a =  0.000      CL =  0.4530
+      Cm = -0.1058     CD =  0.01594   =>   CDf =  0.00725    CDp =  0.00869
+
+ Side 1  free  transition at x/c =  0.8051   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+   3   rms: 0.1402E+00   max: -.1312E+01   C at   45  2   RLX: 0.305
+       a =  0.000      CL =  0.4422
+      Cm = -0.1020     CD =  0.01577   =>   CDf =  0.00726    CDp =  0.00851
+
+ Side 1  free  transition at x/c =  0.8025   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+   4   rms: 0.9773E-01   max: -.8696E+00   C at   45  2   RLX: 0.460
+       a =  0.000      CL =  0.4306
+      Cm = -0.0981     CD =  0.01569   =>   CDf =  0.00728    CDp =  0.00841
+
+ Side 1  free  transition at x/c =  0.7992   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+   5   rms: 0.5184E-01   max: -.3845E+00   C at   45  2   RLX: 0.700
+       a =  0.000      CL =  0.4204
+      Cm = -0.0949     CD =  0.01574   =>   CDf =  0.00732    CDp =  0.00842
+
+ Side 1  free  transition at x/c =  0.7956   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+   6   rms: 0.1626E-01   max: -.8510E-01   C at   45  2   RLX: 0.700
+       a =  0.000      CL =  0.4172
+      Cm = -0.0940     CD =  0.01581   =>   CDf =  0.00736    CDp =  0.00845
+
+ Side 1  free  transition at x/c =  0.7942   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+   7   rms: 0.5219E-02   max: -.2627E-01   D at   29  1   RLX: 0.700
+       a =  0.000      CL =  0.4161
+      Cm = -0.0937     CD =  0.01584   =>   CDf =  0.00738    CDp =  0.00846
+
+ Side 1  free  transition at x/c =  0.7937   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+   8   rms: 0.1600E-02   max: -.8197E-02   D at   30  1   RLX: 0.700
+       a =  0.000      CL =  0.4158
+      Cm = -0.0936     CD =  0.01584   =>   CDf =  0.00739    CDp =  0.00845
+
+ Side 1  free  transition at x/c =  0.7936   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+   9   rms: 0.4789E-03   max: -.2488E-02   D at   30  1   RLX: 0.700
+       a =  0.000      CL =  0.4157
+      Cm = -0.0936     CD =  0.01584   =>   CDf =  0.00739    CDp =  0.00845
+
+ Side 1  free  transition at x/c =  0.7935   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+  10   rms: 0.1430E-03   max: -.7466E-03   D at   29  1   RLX: 0.700
+       a =  0.000      CL =  0.4156
+      Cm = -0.0936     CD =  0.01584   =>   CDf =  0.00739    CDp =  0.00845
+
+ Side 1  free  transition at x/c =  0.7935   25
+ Side 2 forced transition at x/c =  1.0000   30
+
+  11   rms: 0.4274E-04   max: -.2245E-03   D at   29  1   RLX: 0.700
+       a =  0.000      CL =  0.4156
+      Cm = -0.0936     CD =  0.01584   =>   CDf =  0.00739    CDp =  0.00845
+      9.000   10.1265   0.015844   0.004243   0.009330   0.005088    0.7935     #
+
+ Point added to stored polar  1
+ Point written to save file  pol.txt                                         
+ Dump file unspecified or not available
+
+.OPERva   c>  
+.OPERva   c>  
+.OPERva   c>  
+ XFOIL   c>  
