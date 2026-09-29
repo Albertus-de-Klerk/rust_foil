@@ -45,14 +45,16 @@ Workspace: `crates/qfoil-core` (library, no I/O), `crates/qfoil-cli` (binary `qf
 |---|---|---|---|
 | 1 | `spline`, `geometry` (`dat`, `naca`) | SPLINE, SPLIND, SEGSPL(D), TRISOL, SEVAL, DEVAL, D2VAL, CURV(S), SINVRT, SCALC; AREAD/GETFLT, LOAD (orientation), NACA/NACA4/NACA5, LEFIND | **bit-identical** (0 ULP): buffer XB, YB, SB, XBP, YBP for NACA 0012, 4412, E387, DU 91-W2-250 |
 | 2 | `paneling` | PANGEN, ABCOPY, TECALC (geometry), NCALC, APCALC | **bit-identical** (0 ULP): X, Y, S, XP, YP, NX, NY, APANEL, SLE, LE, TE, CHORD, ANTE, ASTE, DSTE |
+| 3 | `linalg`, `inviscid` (`influence`, `forces`), `wake`, `settings`, `operating` | LUDCMP, BAKSUB, GAUSS; PSILIN, PSWLIN; GGCALC (incl. sharp-TE branch, E387), SPECAL, QISET, TECALC (strengths), MRCL, COMSET, CPCALC, CLCALC; XYWAKE, SETEXP, ATANC, QWCALC, QDCALC | **bit-identical** (0 ULP): AIJ, BIJ, LU factors and pivots, GAMU, GAM, QINV, CPI, CL, CM, CDP, wake x/y/s/normals/angles, QINVU, DIJ, for NACA 0012, 4412, E387 (fixtures) and DU 91-W2-250, NACA 0012 α 0/15, NACA 4412 α 15 (`--ignored`) |
 
-Not ported (no effect on results): GEOPAR, NORM (`LNORM` is off by default), SPLINA, SPLNXY, CANG.
+Not ported (no effect on results): GEOPAR, NORM (`LNORM` is off by default), SPLINA, SPLNXY, CANG;
+PSILIN's `GEOLIN` branch (inverse design) and ground-effect images (`LIMAGE`, not reachable from QFoil's CLI).
 
 ## Next
 
-Phase 2, step 3: inviscid, i.e. `linalg` (LUDCMP, BAKSUB, GAUSS), PSILIN, PSWLIN, GGCALC, QISET,
-CLCALC, CPCALC, COMSET, MRCL, SPECAL, plus XYWAKE, QWCALC, QDCALC. Tests: `aij_raw`, `ggcalc`,
-`specal`, `xywake`, `qdcalc` records.
+Phase 2, step 4: BL closures and derivatives (`bl::closure`: HKIN, HSL, HST◆, CFL, CFT, DIL, DILW,
+DIT, HCT; `bl::transition`: DAMPL, DAMPL2, AXSET), with finite-difference tests of every analytic
+derivative plus a Fortran driver producing reference tables for the closures.
 
 ## Decisions (2026-09-29)
 

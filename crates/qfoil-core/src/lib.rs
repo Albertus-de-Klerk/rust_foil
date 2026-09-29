@@ -7,12 +7,21 @@
 
 pub mod error;
 pub mod geometry;
+pub mod inviscid;
 pub mod limits;
+pub mod linalg;
+pub mod operating;
 pub mod paneling;
+pub mod settings;
 pub mod spline;
+pub mod wake;
 
 mod fortran;
 
 pub use error::{GeometryError, ParseError, SplineError};
 pub use geometry::{Airfoil, AirfoilSource, Geometry, NacaDesignation};
+pub use inviscid::InviscidSolution;
+pub use operating::OperatingPoint;
 pub use paneling::{Paneling, PanelingMode, PanelingSettings};
+pub use settings::Settings;
+pub use wake::Wake;
