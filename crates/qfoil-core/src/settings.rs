@@ -53,6 +53,55 @@ impl Default for FlowConditions {
     }
 }
 
+/// Boundary-layer model constants (XFOIL `/BLPAR/`, defaults from `BLPINI`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct BlParams {
+    /// Shear-lag constant (`SCCON`). **Unused in QFoil**: the tanh Kc(Hk) law replaces it
+    /// (PORTING_PLAN D1, S5). Kept for parity of the parameter set.
+    pub sccon: f64,
+    /// G–β locus constant A (`GACON`).
+    pub gacon: f64,
+    /// G–β locus constant B (`GBCON`).
+    pub gbcon: f64,
+    /// Wall term of the G–β locus (`GCCON`).
+    pub gccon: f64,
+    /// Wall/wake dissipation-length ratio (`DLCON`).
+    pub dlcon: f64,
+    /// Initial Ctau constant (`CTRCON`).
+    pub ctrcon: f64,
+    /// Initial Ctau exponent (`CTRCEX`).
+    pub ctrcex: f64,
+    /// Ue weighting in the equilibrium relation (`DUXCON`).
+    pub duxcon: f64,
+    /// Ctau weighting (`CTCON = 0.5/(GACON²·GBCON)`).
+    pub ctcon: f64,
+    /// Skin-friction factor (`CFFAC`).
+    pub cffac: f64,
+    /// QFoil wake drag correction factor (`GWAKE`, D10/D11).
+    pub gwake: f64,
+}
+
+impl Default for BlParams {
+    /// Port of XFOIL/QFoil `BLPINI`.
+    fn default() -> Self {
+        let gacon = 6.70;
+        let gbcon = 0.75;
+        Self {
+            sccon: 5.6,
+            gacon,
+            gbcon,
+            gccon: 18.0,
+            dlcon: 0.9,
+            ctrcon: 1.8,
+            ctrcex: 3.3,
+            duxcon: 1.0,
+            ctcon: 0.5 / (gacon * gacon * gbcon),
+            cffac: 1.0,
+            gwake: 0.40,
+        }
+    }
+}
+
 /// All analysis settings.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Settings {

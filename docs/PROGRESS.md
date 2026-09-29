@@ -45,6 +45,7 @@ Workspace: `crates/qfoil-core` (library, no I/O), `crates/qfoil-cli` (binary `qf
 |---|---|---|---|
 | 1 | `spline`, `geometry` (`dat`, `naca`) | SPLINE, SPLIND, SEGSPL(D), TRISOL, SEVAL, DEVAL, D2VAL, CURV(S), SINVRT, SCALC; AREAD/GETFLT, LOAD (orientation), NACA/NACA4/NACA5, LEFIND | **bit-identical** (0 ULP): buffer XB, YB, SB, XBP, YBP for NACA 0012, 4412, E387, DU 91-W2-250 |
 | 2 | `paneling` | PANGEN, ABCOPY, TECALC (geometry), NCALC, APCALC | **bit-identical** (0 ULP): X, Y, S, XP, YP, NX, NY, APANEL, SLE, LE, TE, CHORD, ANTE, ASTE, DSTE |
+| 4 | `bl::closure`, `bl::transition`, `settings::BlParams` | HKIN, HCT, HSL, HST◆ (QFoil HSMIN/DHSINF), CFL, CFT, DIL, DILW, DIT; DAMPL, DAMPL2, AXSET; BLPINI | **bit-identical** (0 ULP) on all 6,331 rows of the Fortran reference table (`tools/fdrivers/closures.f`, every branch); every analytic partial matches central differences (rel 1e-5), except DILW ∂/∂HK, an upstream sign error (S14) |
 | 3 | `linalg`, `inviscid` (`influence`, `forces`), `wake`, `settings`, `operating` | LUDCMP, BAKSUB, GAUSS; PSILIN, PSWLIN; GGCALC (incl. sharp-TE branch, E387), SPECAL, QISET, TECALC (strengths), MRCL, COMSET, CPCALC, CLCALC; XYWAKE, SETEXP, ATANC, QWCALC, QDCALC | **bit-identical** (0 ULP): AIJ, BIJ, LU factors and pivots, GAMU, GAM, QINV, CPI, CL, CM, CDP, wake x/y/s/normals/angles, QINVU, DIJ, for NACA 0012, 4412, E387 (fixtures) and DU 91-W2-250, NACA 0012 α 0/15, NACA 4412 α 15 (`--ignored`) |
 
 Not ported (no effect on results): GEOPAR, NORM (`LNORM` is off by default), SPLINA, SPLNXY, CANG;
@@ -52,9 +53,10 @@ PSILIN's `GEOLIN` branch (inverse design) and ground-effect images (`LIMAGE`, no
 
 ## Next
 
-Phase 2, step 4: BL closures and derivatives (`bl::closure`: HKIN, HSL, HST◆, CFL, CFT, DIL, DILW,
-DIT, HCT; `bl::transition`: DAMPL, DAMPL2, AXSET), with finite-difference tests of every analytic
-derivative plus a Fortran driver producing reference tables for the closures.
+Phase 2, step 5: BL station and march, i.e. `bl::station` (BLPRV, BLKIN, BLVAR, BLMID), `bl::equations`
+(BLDIF◆ with the tanh shear-lag term, its Jacobian and the wake ALD; TRDIF, BLSYS, TESYS),
+`bl::transition` (TRCHEK, TRCHEK2) and `bl::march` (MRCHUE, MRCHDU◆, XIFSET, DSLIM).
+Tests: `mrchue` records, plus FD checks of the station Jacobians (VS1/VS2) including D2.
 
 ## Decisions (2026-09-29)
 

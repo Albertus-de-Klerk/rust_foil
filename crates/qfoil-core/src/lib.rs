@@ -5,6 +5,7 @@
 //!
 //! Licensed GPL-2.0-or-later, like XFOIL and QFOIL. See `NOTICE` for provenance.
 
+pub mod bl;
 pub mod error;
 pub mod geometry;
 pub mod inviscid;

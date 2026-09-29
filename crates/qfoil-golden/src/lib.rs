@@ -13,6 +13,7 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 mod compare;
+pub mod fd;
 mod polar;
 
 pub use compare::{AsSlice, Mismatch, compare_slices, ulp_distance};
@@ -326,6 +327,23 @@ pub fn full_dump(name: &str) -> DumpSet {
             "{e}\nfull dumps are not committed: run tools/build_reference.sh && tools/gen_golden.sh"
         )
     })
+}
+
+/// The closure reference table `tests/golden/closures.txt` (from
+/// `tools/fdrivers/run_closures.sh`): rows of numbers keyed by Fortran routine name.
+pub fn closure_table() -> BTreeMap<String, Vec<Vec<f64>>> {
+    let path = golden_root().join("closures.txt");
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    let mut table: BTreeMap<String, Vec<Vec<f64>>> = BTreeMap::new();
+    for line in text.lines() {
+        let mut f = line.split_whitespace();
+        let Some(name) = f.next() else { continue };
+        let row = f
+            .map(|v| parse_f64(v).unwrap_or_else(|| panic!("bad number `{v}`")))
+            .collect();
+        table.entry(name.to_owned()).or_default().push(row);
+    }
+    table
 }
 
 /// Path of a golden airfoil coordinate file.
