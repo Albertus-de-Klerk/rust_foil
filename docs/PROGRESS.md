@@ -45,6 +45,7 @@ Workspace: `crates/qfoil-core` (library, no I/O), `crates/qfoil-cli` (binary `qf
 |---|---|---|---|
 | 1 | `spline`, `geometry` (`dat`, `naca`) | SPLINE, SPLIND, SEGSPL(D), TRISOL, SEVAL, DEVAL, D2VAL, CURV(S), SINVRT, SCALC; AREAD/GETFLT, LOAD (orientation), NACA/NACA4/NACA5, LEFIND | **bit-identical** (0 ULP): buffer XB, YB, SB, XBP, YBP for NACA 0012, 4412, E387, DU 91-W2-250 |
 | 2 | `paneling` | PANGEN, ABCOPY, TECALC (geometry), NCALC, APCALC | **bit-identical** (0 ULP): X, Y, S, XP, YP, NX, NY, APANEL, SLE, LE, TE, CHORD, ANTE, ASTE, DSTE |
+| 5 | `bl::station`, `bl::equations`, `bl::march`, `bl` (BoundaryLayer, Side) | BLPRV, BLKIN, BLVAR, BLMID, BLDIF◆ (D1–D3: tanh Kc(Hk), SCC_HKA Jacobian, wake ALD), TRCHEK2, TRDIF, BLSYS, TESYS, MRCHUE, MRCHDU◆ (D5), XIFSET, DSLIM | **bit-identical** (0 ULP): all BL arrays after MRCHUE (θ, δ*, Cτ/N, Ue, mass, τ, D, Cτeq, δ, θ*, ITRAN, XSSITR), primary arrays after MRCHDU, on 7 runs incl. transition, separation (inverse mode) and wake. Station Jacobians VS1/VS2 match finite differences for laminar, wake and turbulent intervals, except the upstream S15 approximation, which is isolated and verified |
 | 4 | `bl::closure`, `bl::transition`, `settings::BlParams` | HKIN, HCT, HSL, HST◆ (QFoil HSMIN/DHSINF), CFL, CFT, DIL, DILW, DIT; DAMPL, DAMPL2, AXSET; BLPINI | **bit-identical** (0 ULP) on all 6,331 rows of the Fortran reference table (`tools/fdrivers/closures.f`, every branch); every analytic partial matches central differences (rel 1e-5), except DILW ∂/∂HK, an upstream sign error (S14) |
 | 3 | `linalg`, `inviscid` (`influence`, `forces`), `wake`, `settings`, `operating` | LUDCMP, BAKSUB, GAUSS; PSILIN, PSWLIN; GGCALC (incl. sharp-TE branch, E387), SPECAL, QISET, TECALC (strengths), MRCL, COMSET, CPCALC, CLCALC; XYWAKE, SETEXP, ATANC, QWCALC, QDCALC | **bit-identical** (0 ULP): AIJ, BIJ, LU factors and pivots, GAMU, GAM, QINV, CPI, CL, CM, CDP, wake x/y/s/normals/angles, QINVU, DIJ, for NACA 0012, 4412, E387 (fixtures) and DU 91-W2-250, NACA 0012 α 0/15, NACA 4412 α 15 (`--ignored`) |
 
@@ -53,10 +54,9 @@ PSILIN's `GEOLIN` branch (inverse design) and ground-effect images (`LIMAGE`, no
 
 ## Next
 
-Phase 2, step 5: BL station and march, i.e. `bl::station` (BLPRV, BLKIN, BLVAR, BLMID), `bl::equations`
-(BLDIF◆ with the tanh shear-lag term, its Jacobian and the wake ALD; TRDIF, BLSYS, TESYS),
-`bl::transition` (TRCHEK, TRCHEK2) and `bl::march` (MRCHUE, MRCHDU◆, XIFSET, DSLIM).
-Tests: `mrchue` records, plus FD checks of the station Jacobians (VS1/VS2) including D2.
+Phase 2, step 6: Newton system, i.e. `newton` (SETBL assembly incl. its station loop that rewrites
+TAU/DIS/CTQ/DELT/TSTR/XSSITR, BLSOLV block solver, UPDATE◆ with D6–D8), plus UESET, IBLSYS.
+Tests: `setbl` (VA, VB, VDEL, full VM in `*_vm`), `blsolv`, `update` records.
 
 ## Decisions (2026-09-29)
 
@@ -66,6 +66,10 @@ Tests: `mrchue` records, plus FD checks of the station Jacobians (VS1/VS2) inclu
 * **Q4.** Full dumps gitignored. A trimmed fixture set (~9 MB) is committed for the default test run, and `--ignored` tests use the full dumps.
 * **Q5.** `OperatingPoint` struct approved.
 * **Q6.** Git repository initialised.
+
+## Open questions (new)
+
+* **S14 / S15.** Two upstream XFOIL Jacobian defects were found by the finite-difference checks: a sign error in DILW ∂/∂Hk, and a missing Rθ path in the turbulent shear-lag row. Both are ported faithfully. After parity: fix them (opt-in or default), or leave them as is? Fixing changes the convergence behaviour but not converged answers.
 
 ## Known deviations of the Rust port from the reference
 
