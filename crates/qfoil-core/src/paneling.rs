@@ -317,9 +317,9 @@ impl Paneling {
         // Newton iteration for node positions:
         // (1 + C*curvature)*ds is made equal on both sides of every node
         for _ in 0..20 {
-            let mut cv1 = seval(snew[0], cv, cvp, sb);
+            let cv1 = seval(snew[0], cv, cvp, sb);
             let mut cv2 = seval(snew[1], cv, cvp, sb);
-            let mut cvs1 = deval(snew[0], cv, cvp, sb);
+            let cvs1 = deval(snew[0], cv, cvp, sb);
             let mut cvs2 = deval(snew[1], cv, cvp, sb);
             let mut cavm = (cv1 * cv1 + cv2 * cv2).sqrt();
             let (mut cavm_s1, mut cavm_s2) = if cavm == 0.0 {
@@ -346,15 +346,12 @@ impl Paneling {
                 w2[i] = fp + fm + cc * (dsp * cavp_s2 + dsm * cavm_s2);
                 w3[i] = -fp + cc * dsp * cavp_s3;
                 w4[i] = -rez;
-                cv1 = cv2;
                 cv2 = cv3;
-                cvs1 = cvs2;
                 cvs2 = cvs3;
                 cavm = cavp;
                 cavm_s1 = cavp_s2;
                 cavm_s2 = cavp_s3;
             }
-            let _ = (cv1, cvs1); // rolled like the Fortran; not read after the loop
 
             // fix endpoints (TE)
             w2[0] = 1.0;

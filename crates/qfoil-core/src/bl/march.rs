@@ -667,6 +667,5 @@ impl BoundaryLayer {
                 k.tran = false;
             }
         }
-        let _ = sens;
     }
 }

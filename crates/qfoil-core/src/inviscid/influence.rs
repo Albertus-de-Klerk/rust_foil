@@ -492,6 +492,4 @@ pub fn pswlin(wake: &Wake, wake_sig: &[f64], fp: FieldPoint, out: &mut Influence
     }
     out.psi = psi;
     out.psi_ni = psi_ni;
-    let _ = n;
-    let _ = nw;
 }

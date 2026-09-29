@@ -137,52 +137,23 @@ impl Kernel {
                 };
 
                 // equilibrium 1/Ue dUe/dx (12 Oct 94)
-                let (hkc, hkc_hka, hkc_rta) = if ityp == Interval::Turbulent {
+                let (hkc, hkc_hka) = if ityp == Interval::Turbulent {
                     let gcc = bl.gccon;
                     let hkc = hka - 1.0 - gcc / rta;
-                    if hkc < 0.01 {
-                        (0.01, 0.0, 0.0)
-                    } else {
-                        (hkc, 1.0, gcc / powi(rta, 2))
-                    }
+                    if hkc < 0.01 { (0.01, 0.0) } else { (hkc, 1.0) }
                 } else {
-                    (hka - 1.0, 1.0, 0.0)
+                    (hka - 1.0, 1.0)
                 };
                 let hr = hkc / (bl.gacon * ald * hka);
                 let hr_hka = hkc_hka / (bl.gacon * ald * hka) - hr / hka;
-                let hr_rta = hkc_rta / (bl.gacon * ald * hka);
 
                 let uq = (0.5 * cfa - powi(hr, 2)) / (bl.gbcon * da);
                 let uq_hka = -2.0 * hr * hr_hka / (bl.gbcon * da);
-                let uq_rta = -2.0 * hr * hr_rta / (bl.gbcon * da);
                 let uq_cfa = 0.5 / (bl.gbcon * da);
                 let uq_da = -uq / da;
-                let uq_upw = uq_cfa * (s2.cf - s1.cf) + uq_hka * (s2.hk - s1.hk);
-
-                let mut uq_t1 =
-                    (1.0 - upw) * (uq_cfa * s1.cf_t + uq_hka * s1.hk_t) + uq_upw * upw_t1;
-                let mut uq_d1 =
-                    (1.0 - upw) * (uq_cfa * s1.cf_d + uq_hka * s1.hk_d) + uq_upw * upw_d1;
-                let mut uq_u1 =
-                    (1.0 - upw) * (uq_cfa * s1.cf_u + uq_hka * s1.hk_u) + uq_upw * upw_u1;
-                let mut uq_t2 = upw * (uq_cfa * s2.cf_t + uq_hka * s2.hk_t) + uq_upw * upw_t2;
-                let mut uq_d2 = upw * (uq_cfa * s2.cf_d + uq_hka * s2.hk_d) + uq_upw * upw_d2;
-                let mut uq_u2 = upw * (uq_cfa * s2.cf_u + uq_hka * s2.hk_u) + uq_upw * upw_u2;
-                let mut uq_ms = (1.0 - upw) * (uq_cfa * s1.cf_ms + uq_hka * s1.hk_ms)
-                    + uq_upw * upw_ms
-                    + upw * (uq_cfa * s2.cf_ms + uq_hka * s2.hk_ms);
-                let mut uq_re = (1.0 - upw) * uq_cfa * s1.cf_re + upw * uq_cfa * s2.cf_re;
-                uq_t1 += 0.5 * uq_rta * s1.rt_t;
-                uq_d1 += 0.5 * uq_da;
-                uq_u1 += 0.5 * uq_rta * s1.rt_u;
-                uq_t2 += 0.5 * uq_rta * s2.rt_t;
-                uq_d2 += 0.5 * uq_da;
-                uq_u2 += 0.5 * uq_rta * s2.rt_u;
-                uq_ms = uq_ms + 0.5 * uq_rta * s1.rt_ms + 0.5 * uq_rta * s2.rt_ms;
-                uq_re = uq_re + 0.5 * uq_rta * s1.rt_re + 0.5 * uq_rta * s2.rt_re;
-                // UQ's T/D/U/MS/RE partials are formed but not used by the shear-lag
-                // row, exactly as in XFOIL (Z_HKA, Z_CFA and Z_DA carry them).
-                let _ = (uq_t1, uq_d1, uq_u1, uq_t2, uq_d2, uq_u2, uq_ms, uq_re);
+                // XFOIL also forms UQ's partials w.r.t. T, D, U, M², Re (UQ_T1 ... UQ_RE) but
+                // never uses them: the Jacobian carries UQ only through Z_HKA, Z_CFA and Z_DA,
+                // which omits the Rθ dependence of HKC (PORTING_PLAN S15).
 
                 // QFoil D1: shear-lag coefficient Kc(Hk) = 4.65 - 0.95 tanh(0.5 (Hk - 3.5))
                 // (XFOIL: SCC = SCCON*1.333/(1+USA)); SCC_HKA is the new Jacobian term (D2).
@@ -444,26 +415,20 @@ impl Kernel {
                     (-sfa) / (ampl2 - s1.ampl),
                 )
             };
-            let (sfx, sfx_x1, sfx_x2, sfx_xf) = if xiforc < x2 {
+            let (sfx, sfx_x1, sfx_x2) = if xiforc < x2 {
                 let sfx = (xiforc - x1) / (x2 - x1);
-                (
-                    sfx,
-                    (sfx - 1.0) / (x2 - x1),
-                    (-sfx) / (x2 - x1),
-                    1.0 / (x2 - x1),
-                )
+                (sfx, (sfx - 1.0) / (x2 - x1), (-sfx) / (x2 - x1))
             } else {
-                (1.0, 0.0, 0.0, 0.0)
+                (1.0, 0.0, 0.0)
             };
             // weighting factor from free or forced transition
-            let (wf2, wf2_a1, wf2_a2, wf2_x1, wf2_x2, wf2_xf) = if sfa < sfx {
-                (sfa, sfa_a1, sfa_a2, 0.0, 0.0, 0.0)
+            let (wf2, wf2_a1, wf2_a2, wf2_x1, wf2_x2) = if sfa < sfx {
+                (sfa, sfa_a1, sfa_a2, 0.0, 0.0)
             } else {
-                (sfx, 0.0, 0.0, sfx_x1, sfx_x2, sfx_xf)
+                (sfx, 0.0, 0.0, sfx_x1, sfx_x2)
             };
             let wf1 = 1.0 - wf2;
-            let (wf1_a1, wf1_a2, wf1_x1, wf1_x2, wf1_xf) =
-                (-wf2_a1, -wf2_a2, -wf2_x1, -wf2_x2, -wf2_xf);
+            let (wf1_a1, wf1_a2, wf1_x1, wf1_x2) = (-wf2_a1, -wf2_a2, -wf2_x1, -wf2_x2);
 
             // interpolate BL variables to XT
             let xt = x1 * wf1 + x2 * wf2;
@@ -497,8 +462,6 @@ impl Kernel {
                 wf2_x1,
                 wf1_x2,
                 wf2_x2,
-                wf1_xf,
-                wf2_xf,
                 xt,
                 xt_a2,
                 tt_a2,
@@ -576,8 +539,6 @@ impl Kernel {
             wf2_x1,
             wf1_x2,
             wf2_x2,
-            wf1_xf,
-            wf2_xf,
             xt,
             xt_a2,
             tt_a2,
@@ -601,9 +562,6 @@ impl Kernel {
         let tt_x2 = t1 * wf1_x2 + t2 * wf2_x2;
         let dt_x2 = d1 * wf1_x2 + d2 * wf2_x2;
         let ut_x2 = u1 * wf1_x2 + u2 * wf2_x2;
-        let tt_xf = t1 * wf1_xf + t2 * wf2_xf;
-        let dt_xf = d1 * wf1_xf + d2 * wf2_xf;
-        let ut_xf = u1 * wf1_xf + u2 * wf2_xf;
 
         // AX = AX(HK1, T1, RT1, A1, HKT, TT, RTT, AT)
         let [ax_hk1, ax_t1, ax_rt1, ax_a1] = a.d1;
@@ -621,7 +579,6 @@ impl Kernel {
         let ax_u2 = gu * ut_u2;
         let ax_a2 = ax_at * amplt_a2 + gt * tt_a2 + gd * dt_a2 + gu * ut_a2;
         let ax_x2 = gt * tt_x2 + gd * dt_x2 + gu * ut_x2;
-        let ax_xf = gt * tt_xf + gd * dt_xf + gu * ut_xf;
         let ax_ms = ax_hkt * st.hk_ms + ax_rtt * st.rt_ms + ax_hk1 * s1.hk_ms + ax_rt1 * s1.rt_ms;
         let ax_re = ax_rtt * st.rt_re + ax_rt1 * s1.rt_re;
 
@@ -637,7 +594,6 @@ impl Kernel {
         let z_d2 = z_ax * ax_d2;
         let z_u2 = z_ax * ax_u2;
         let z_x2 = z_ax * ax_x2 - a.ax;
-        let _z_xf = z_ax * ax_xf;
         let z_ms = z_ax * ax_ms;
         let z_re = z_ax * ax_re;
 
@@ -999,8 +955,6 @@ struct TrIter {
     wf2_x1: f64,
     wf1_x2: f64,
     wf2_x2: f64,
-    wf1_xf: f64,
-    wf2_xf: f64,
     xt: f64,
     xt_a2: f64,
     tt_a2: f64,

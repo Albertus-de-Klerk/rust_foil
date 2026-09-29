@@ -35,7 +35,7 @@
 
 Unconverged α are listed per case by `tools/golden_summary.sh`.
 
-### Phase 2 (in progress)
+### Phase 2 (complete)
 
 Workspace: `crates/qfoil-core` (library, no I/O), `crates/qfoil-cli` (binary `qfoil`, stub),
 `crates/qfoil-golden` (test support: dump/polar readers in `BTreeMap`s, ULP comparison and the
@@ -57,7 +57,6 @@ PSILIN's `GEOLIN` branch (inverse design) and ground-effect images (`LIMAGE`, no
 
 ## Next
 
-* Phase 2 wrap-up: idiomatic refactor commit (behaviour-preserving, guarded by the bit-parity tests).
 * Phase 3: `docs/VALIDATION.md` with the per-case table and `plotters` plots. Parity is already
   exact, so every acceptance criterion holds with zero error.
 * Phase 4: rayon over α (points are independent), criterion benchmarks against the reference binary.
