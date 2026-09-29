@@ -14,8 +14,10 @@ pub mod linalg;
 pub mod newton;
 pub mod operating;
 pub mod paneling;
+pub mod polar;
 pub mod settings;
 pub mod spline;
+pub mod viscous;
 pub mod wake;
 
 mod fortran;
@@ -25,5 +27,10 @@ pub use geometry::{Airfoil, AirfoilSource, Geometry, NacaDesignation};
 pub use inviscid::InviscidSolution;
 pub use operating::OperatingPoint;
 pub use paneling::{Paneling, PanelingMode, PanelingSettings};
+pub use polar::{
+    Alpha, AlphaSchedule, AnalysisError, PointStatus, Polar, PolarPoint, PolarSettings,
+    analyse_polar,
+};
 pub use settings::Settings;
+pub use viscous::ViscousSettings;
 pub use wake::Wake;

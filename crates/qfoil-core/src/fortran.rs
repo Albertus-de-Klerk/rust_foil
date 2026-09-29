@@ -20,6 +20,16 @@ pub(crate) fn powi(x: f64, n: u32) -> f64 {
     }
 }
 
+/// `x**y` for a real exponent, evaluated by the C library `pow` as gfortran does.
+///
+/// LLVM rewrites `pow(x, 0.5)` into `sqrt` (with ±0/−∞ fix-ups) even without fast-math.
+/// `sqrt` is correctly rounded while glibc `pow` is accurate to <1 ULP, so the rewrite can
+/// change the last bit. Hiding the exponent from the optimiser keeps the libm call.
+#[inline(always)]
+pub(crate) fn pow(x: f64, y: f64) -> f64 {
+    x.powf(std::hint::black_box(y))
+}
+
 /// π as XFOIL computes it: `PI = 4.0*ATAN(1.0)` (INIT).
 pub(crate) const PI: f64 = std::f64::consts::PI;
 

@@ -79,7 +79,7 @@ impl BoundaryLayer {
         bl.iblpan(pan.len(), wake.len());
         bl.xicalc(pan, wake);
         bl.iblsys();
-        bl.uicalc(sol);
+        bl.uicalc(&sol.qinv, &sol.qinv_a);
         // QFoil D9: always restart from the inviscid Ue, clamping suction peaks at 2.0
         // (includes the dummy station 0, as the Fortran loop runs from IBL = 1)
         for is in 0..2 {
@@ -204,16 +204,16 @@ impl BoundaryLayer {
         self.nsys = iv;
     }
 
-    /// Inviscid edge speed from the panel speed. Port of XFOIL `UICALC`.
-    pub fn uicalc(&mut self, sol: &InviscidSolution) {
+    /// Inviscid edge speed from the panel speed `qinv` (N+NW). Port of XFOIL `UICALC`.
+    pub fn uicalc(&mut self, qinv: &[f64], qinv_a: &[f64]) {
         for is in 0..2 {
             let sd = &mut self.sides[is];
             sd.uinv[0] = 0.0;
             sd.uinv_a[0] = 0.0;
             for ibl in 1..self.nbl[is] {
                 let i = sd.ipan[ibl];
-                sd.uinv[ibl] = sd.vti[ibl] * sol.qinv[i];
-                sd.uinv_a[ibl] = sd.vti[ibl] * sol.qinv_a[i];
+                sd.uinv[ibl] = sd.vti[ibl] * qinv[i];
+                sd.uinv_a[ibl] = sd.vti[ibl] * qinv_a[i];
             }
         }
     }
@@ -258,7 +258,8 @@ impl BoundaryLayer {
         &mut self,
         pan: &Paneling,
         wake: &Wake,
-        sol: &InviscidSolution,
+        qinv: &[f64],
+        qinv_a: &[f64],
         gam: &mut [f64],
         qvis: &mut [f64],
     ) -> bool {
@@ -274,7 +275,7 @@ impl BoundaryLayer {
             self.xicalc(pan, wake);
         } else {
             self.iblpan(pan.len(), wake.len());
-            self.uicalc(sol);
+            self.uicalc(qinv, qinv_a);
             self.xicalc(pan, wake);
             self.iblsys();
 

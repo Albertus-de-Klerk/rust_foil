@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use super::{Airfoil, AirfoilSource};
 use crate::error::GeometryError;
-use crate::fortran::powi;
+use crate::fortran::{pow, powi};
 use crate::limits::IQX;
 
 /// Points per side: `NSIDE = IQX/3` (xfoil.f `NACA`).
@@ -82,7 +82,7 @@ fn stations() -> Vec<f64> {
                 1.0
             } else {
                 let frac = i as f64 / (NSIDE - 1) as f64;
-                1.0 - anp * frac * (1.0 - frac).powf(AN) - (1.0 - frac).powf(anp)
+                1.0 - anp * frac * pow(1.0 - frac, AN) - pow(1.0 - frac, anp)
             }
         })
         .collect()

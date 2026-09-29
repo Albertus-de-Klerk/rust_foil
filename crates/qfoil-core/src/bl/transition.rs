@@ -1,6 +1,6 @@
 //! e^N amplification rates. Port of XFOIL `DAMPL`, `DAMPL2` and `AXSET` (xblsys.f).
 
-use crate::fortran::powi;
+use crate::fortran::{pow, powi};
 
 /// Spatial amplification rate `AX = dN/dx` with partials.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -39,7 +39,7 @@ fn envelope(hk: f64, th: f64, rt: f64, extra_af: bool) -> (Amplification, f64, f
     let hmi_hk = -powi(hmi, 2);
 
     // log10(critical Rθ) – H correlation for Falkner–Skan profiles
-    let aa = 2.492 * hmi.powf(0.43);
+    let aa = 2.492 * pow(hmi, 0.43);
     let aa_hk = (aa / hmi) * 0.43 * hmi_hk;
     let bb = (14.0 * hmi - 9.24).tanh();
     let bb_hk = (1.0 - bb * bb) * 14.0 * hmi_hk;
@@ -132,8 +132,8 @@ pub fn dampl2(hk: f64, th: f64, rt: f64) -> Amplification {
     let tnr_hk = -(1.0 - powi(tnr, 2)) * 1.2 * gr0_hk;
 
     let mut ax2 = Amplification {
-        ax: (0.086 * tnr - 0.25 / (hk - 1.0).powf(1.5)) / th,
-        hk: (0.086 * tnr_hk + 1.5 * 0.25 / (hk - 1.0).powf(2.5)) / th,
+        ax: (0.086 * tnr - 0.25 / pow(hk - 1.0, 1.5)) / th,
+        hk: (0.086 * tnr_hk + 1.5 * 0.25 / pow(hk - 1.0, 2.5)) / th,
         rt: (0.086 * tnr_rt) / th,
         th: 0.0,
     };

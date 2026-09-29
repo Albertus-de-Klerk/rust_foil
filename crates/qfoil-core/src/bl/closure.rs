@@ -5,7 +5,7 @@
 //! Each returns a value with its partial derivatives; field names follow the Fortran
 //! (`hs_hk` is ∂HS/∂HK). Operation order follows the Fortran for bit-identical results.
 
-use crate::fortran::powi;
+use crate::fortran::{pow, powi};
 
 /// A correlation `f(HK, RT, M²)` with its partials.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -153,7 +153,7 @@ pub fn cft(hk: f64, rt: f64, msq: f64, cffac: f64) -> Correlation {
     let arg = (-1.33 * hk).max(-20.0);
     let thk = (4.0 - hk / 0.875).tanh();
 
-    let cfo = cffac * 0.3 * arg.exp() * (grt / LN10_CFT).powf(gex);
+    let cfo = cffac * 0.3 * arg.exp() * pow(grt / LN10_CFT, gex);
     let cf = (cfo + 1.1e-4 * (thk - 1.0)) / fc;
     let cf_hk =
         (-1.33 * cfo - 0.31 * (grt / LN10_CFT).ln() * cfo - 1.1e-4 * (1.0 - powi(thk, 2)) / 0.875)
@@ -172,8 +172,8 @@ pub fn cft(hk: f64, rt: f64, msq: f64, cffac: f64) -> Correlation {
 /// Laminar dissipation `2 CD/H*` (Falkner–Skan). Port of XFOIL `DIL`.
 pub fn dil(hk: f64, rt: f64) -> Correlation {
     let (di, di_hk) = if hk < 4.0 {
-        let di = (0.00205 * (4.0 - hk).powf(5.5) + 0.207) / rt;
-        let di_hk = (-0.00205 * 5.5 * (4.0 - hk).powf(4.5)) / rt;
+        let di = (0.00205 * pow(4.0 - hk, 5.5) + 0.207) / rt;
+        let di_hk = (-0.00205 * 5.5 * pow(4.0 - hk, 4.5)) / rt;
         (di, di_hk)
     } else {
         let hkb = hk - 4.0;

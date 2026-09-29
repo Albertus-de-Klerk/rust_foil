@@ -8,7 +8,7 @@
 
 use super::closure::{cfl, cft, dil, dilw, hct, hkin, hsl, hst};
 use super::transition::AmplificationModel;
-use crate::fortran::powi;
+use crate::fortran::{pow, powi};
 use crate::settings::BlParams;
 
 /// Primary and secondary variables of one BL station with their sensitivities
@@ -139,7 +139,7 @@ impl KernelParams {
     ) -> Self {
         let gm1bl = gamma - 1.0;
         let qinfbl = qinf;
-        let rstbl = (1.0 + 0.5 * gm1bl * powi(minf, 2)).powf(1.0 / gm1bl);
+        let rstbl = pow(1.0 + 0.5 * gm1bl * powi(minf, 2), 1.0 / gm1bl);
         let rstbl_ms = 0.5 * rstbl / (1.0 + 0.5 * gm1bl * powi(minf, 2));
         let hstinv = gm1bl * powi(minf / qinfbl, 2) / (1.0 + 0.5 * gm1bl * powi(minf, 2));
         let hstinv_ms = gm1bl * powi(1.0 / qinfbl, 2) / (1.0 + 0.5 * gm1bl * powi(minf, 2))
@@ -339,9 +339,9 @@ impl Kernel {
         s.m_ms = u * u * tr / (p.gm1bl * (1.0 - 0.5 * u * u * p.hstinv)) * p.hstinv_ms;
 
         // edge static density (isentropic)
-        s.r = p.rstbl * tr.powf(-1.0 / p.gm1bl);
+        s.r = p.rstbl * pow(tr, -1.0 / p.gm1bl);
         s.r_u = -s.r / tr * 0.5 * s.m_u;
-        s.r_ms = -s.r / tr * 0.5 * s.m_ms + p.rstbl_ms * tr.powf(-1.0 / p.gm1bl);
+        s.r_ms = -s.r / tr * 0.5 * s.m_ms + p.rstbl_ms * pow(tr, -1.0 / p.gm1bl);
 
         // shape parameter
         s.h = s.d / s.t;

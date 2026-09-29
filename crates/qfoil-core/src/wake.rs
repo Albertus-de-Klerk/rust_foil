@@ -1,5 +1,6 @@
 //! Wake geometry. Port of XFOIL `XYWAKE`, `SETEXP` (xutils.f) and `QWCALC`.
 
+use crate::fortran::pow;
 use crate::inviscid::influence::{FieldPoint, Influence, NodeRef, Strengths, psilin};
 use crate::limits::IWX;
 use crate::paneling::Paneling;
@@ -172,8 +173,8 @@ pub fn setexp(ds1: f64, smax: f64, nn: usize) -> Vec<f64> {
         let nexi = nex as i32;
         for _ in 0..100 {
             let sigman = (ratio.powi(nexi) - 1.0) / (ratio - 1.0);
-            let res = sigman.powf(rni) - sigma.powf(rni);
-            let dresdr = rni * sigman.powf(rni) * (rnex * ratio.powi(nexi - 1) - sigman)
+            let res = pow(sigman, rni) - pow(sigma, rni);
+            let dresdr = rni * pow(sigman, rni) * (rnex * ratio.powi(nexi - 1) - sigman)
                 / (ratio.powi(nexi) - 1.0);
             let dratio = -res / dresdr;
             ratio += dratio;

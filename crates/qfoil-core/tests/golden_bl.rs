@@ -330,3 +330,11 @@ fn station_jacobians_match_finite_differences() {
         &[],
     );
 }
+
+/// Debug helper: `GOLDEN_RUN=<dump dir> cargo test --release --test golden_bl debug_run -- --ignored`
+#[test]
+#[ignore = "debug helper"]
+fn debug_run() {
+    let run = std::env::var("GOLDEN_RUN").expect("set GOLDEN_RUN");
+    check_run(&run, &full_dump(&run), 0);
+}

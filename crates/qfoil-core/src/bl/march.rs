@@ -3,6 +3,7 @@
 use super::closure::hkin;
 use super::station::{Kernel, Regime, Rows};
 use super::{BoundaryLayer, Side};
+use crate::fortran::{pow, powi};
 use crate::linalg::gauss;
 use crate::paneling::Paneling;
 use crate::spline::{EndCondition, sinvrt, splind};
@@ -183,8 +184,8 @@ impl BoundaryLayer {
             let uei = sd.uedg[ibl];
             k.p.bule = 1.0;
             let bule = k.p.bule;
-            let ucon = uei / xsi.powf(bule);
-            let tsq = 0.45 / (ucon * (5.0 * bule + 1.0) * k.p.reybl) * xsi.powf(1.0 - bule);
+            let ucon = uei / pow(xsi, bule);
+            let tsq = 0.45 / (ucon * (5.0 * bule + 1.0) * k.p.reybl) * pow(xsi, 1.0 - bule);
             let mut thi = tsq.sqrt();
             let mut dsi = 2.2 * thi;
             let mut ami = 0.0;
@@ -291,10 +292,10 @@ impl BoundaryLayer {
                                 let cnst = 0.03 * (s2.x - s1.x) / s1.t;
                                 let mut hk2 = s1.hk;
                                 for _ in 0..3 {
+                                    // CONST*(HK2-1)**3, 3*CONST*(HK2-1)**2: power first (gfortran)
                                     hk2 = hk2
-                                        - (hk2 + cnst * (hk2 - 1.0) * (hk2 - 1.0) * (hk2 - 1.0)
-                                            - s1.hk)
-                                            / (1.0 + 3.0 * cnst * (hk2 - 1.0) * (hk2 - 1.0));
+                                        - (hk2 + cnst * powi(hk2 - 1.0, 3) - s1.hk)
+                                            / (1.0 + 3.0 * cnst * powi(hk2 - 1.0, 2));
                                 }
                                 k.s2.hk = hk2; // Fortran writes HK2 here
                                 hk2
@@ -362,8 +363,8 @@ impl BoundaryLayer {
                         // Fortran IBL.GT.3  ->  ibl > 2
                         if ibl > 2 {
                             if ibl <= iblte {
-                                thi = sd.thet[ibm] * (sd.xssi[ibl] / sd.xssi[ibm]).powf(0.5);
-                                dsi = sd.dstr[ibm] * (sd.xssi[ibl] / sd.xssi[ibm]).powf(0.5);
+                                thi = sd.thet[ibm] * pow(sd.xssi[ibl] / sd.xssi[ibm], 0.5);
+                                dsi = sd.dstr[ibm] * pow(sd.xssi[ibl] / sd.xssi[ibm], 0.5);
                             } else if ibl == iblte + 1 {
                                 cti = cte;
                                 thi = tte;
@@ -614,8 +615,8 @@ impl BoundaryLayer {
                         // Fortran IBL.GT.3  ->  ibl > 2
                         if ibl > 2 {
                             if ibl <= iblte {
-                                thi = sd.thet[ibm] * (sd.xssi[ibl] / sd.xssi[ibm]).powf(0.5);
-                                dsi = sd.dstr[ibm] * (sd.xssi[ibl] / sd.xssi[ibm]).powf(0.5);
+                                thi = sd.thet[ibm] * pow(sd.xssi[ibl] / sd.xssi[ibm], 0.5);
+                                dsi = sd.dstr[ibm] * pow(sd.xssi[ibl] / sd.xssi[ibm], 0.5);
                                 uei = sd.uedg[ibm];
                             } else if ibl == iblte + 1 {
                                 cti = cte;

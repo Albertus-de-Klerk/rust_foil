@@ -45,6 +45,7 @@ Workspace: `crates/qfoil-core` (library, no I/O), `crates/qfoil-cli` (binary `qf
 |---|---|---|---|
 | 1 | `spline`, `geometry` (`dat`, `naca`) | SPLINE, SPLIND, SEGSPL(D), TRISOL, SEVAL, DEVAL, D2VAL, CURV(S), SINVRT, SCALC; AREAD/GETFLT, LOAD (orientation), NACA/NACA4/NACA5, LEFIND | **bit-identical** (0 ULP): buffer XB, YB, SB, XBP, YBP for NACA 0012, 4412, E387, DU 91-W2-250 |
 | 2 | `paneling` | PANGEN, ABCOPY, TECALC (geometry), NCALC, APCALC | **bit-identical** (0 ULP): X, Y, S, XP, YP, NX, NY, APANEL, SLE, LE, TE, CHORD, ANTE, ASTE, DSTE |
+| 7–8 | `viscous` (VISCAL loop, CDCALC◆ D10), `polar` (public API `analyse_polar`, `PreparedAirfoil`) | VISCAL (QVFUE, GAMQV, STMOVE, CLCALC, CDCALC with GWAKE), ALFA driver | **all 915 golden points bit-identical, 0 convergence-flag mismatches** (`cargo test --release --test golden_polars -- --ignored`), incl. non-converged and deep-stall points. Every dumped Newton iteration of 8 full-dump runs bit-identical |
 | 6 | `newton` (NewtonSystem), `bl::coupling` | SETBL, BLSOLV, UPDATE◆ (D6–D8), UESET; STFIND, IBLPAN, XICALC (incl. WGAP), IBLSYS, UICALC, QVFUE, STMOVE; QFoil VISCAL initialisation (D9) | **bit-identical** (0 ULP): BL set-up from scratch vs `viscal_init` (IST, SST, pointers, ξ, WGAP, UINV, clamped UEDG); first Newton iteration: SETBL VA/VB/VDEL, full VM (~10⁵ entries), derived arrays; BLSOLV solution; UPDATE BL arrays, CL, RLX, RMSBL, RMXBL, on 7 runs |
 | 5 | `bl::station`, `bl::equations`, `bl::march`, `bl` (BoundaryLayer, Side) | BLPRV, BLKIN, BLVAR, BLMID, BLDIF◆ (D1–D3: tanh Kc(Hk), SCC_HKA Jacobian, wake ALD), TRCHEK2, TRDIF, BLSYS, TESYS, MRCHUE, MRCHDU◆ (D5), XIFSET, DSLIM | **bit-identical** (0 ULP): all BL arrays after MRCHUE (θ, δ*, Cτ/N, Ue, mass, τ, D, Cτeq, δ, θ*, ITRAN, XSSITR), primary arrays after MRCHDU, on 7 runs incl. transition, separation (inverse mode) and wake. Station Jacobians VS1/VS2 match finite differences for laminar, wake and turbulent intervals, except the upstream S15 approximation, which is isolated and verified |
 | 4 | `bl::closure`, `bl::transition`, `settings::BlParams` | HKIN, HCT, HSL, HST◆ (QFoil HSMIN/DHSINF), CFL, CFT, DIL, DILW, DIT; DAMPL, DAMPL2, AXSET; BLPINI | **bit-identical** (0 ULP) on all 6,331 rows of the Fortran reference table (`tools/fdrivers/closures.f`, every branch); every analytic partial matches central differences (rel 1e-5), except DILW ∂/∂HK, an upstream sign error (S14) |
@@ -75,4 +76,15 @@ GWAKE drag, D10), convergence test, single-point driver, polar sweep, and the CL
 
 ## Known deviations of the Rust port from the reference
 
-None yet (no Rust code).
+None in results: all 915 golden points are bit-identical. Structural differences that do not
+affect results: no fixed array sizes except where QFoil's behaviour depends on them (NACA point
+count, input limits); LUDCMP's 499-node limit and ABCOPY/PANGEN limits are errors instead of
+`STOP`; `GEOPAR`, `NORM`, plotting, inverse design and `TINDEX` are not ported.
+
+### Parity pitfalls found (for future work)
+1. Fortran `a*b**n` must be written `a * powi(b, n)`: gfortran evaluates the power first
+   (a wake inverse-mode formula in MRCHUE differed by 12–38 ULP before the fix).
+2. LLVM rewrites `pow(x, 0.5)` to `sqrt` without fast-math; glibc `pow` can differ by 1 ULP.
+   All real-exponent powers go through `fortran::pow`, which hides the exponent with
+   `std::hint::black_box`.
+3. `a += b + c` is `a + (b + c)`; Fortran `A = A + B + C` is `(A + B) + C`.

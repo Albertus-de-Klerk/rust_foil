@@ -44,8 +44,10 @@ pub struct InviscidSolution {
     pub qinv: Vec<f64>,
     /// dQINV/dα (N+NW).
     pub qinv_a: Vec<f64>,
-    /// Inviscid Cp on the airfoil (`CPI`, N).
+    /// Inviscid Cp (`CPI`; N after SPECAL, N+NW after a viscous solve).
     pub cpi: Vec<f64>,
+    /// Viscous tangential speed on airfoil and wake (`QVIS`, N+NW).
+    pub qvis: Vec<f64>,
     /// Source strengths `SIG` (N+NW). XFOIL never sets them in analysis; they stay zero.
     pub sig: Vec<f64>,
     /// Source influence matrix `DIJ` ((N+NW)²), once [`Self::qdcalc`] has run.
@@ -188,6 +190,7 @@ impl InviscidSolution {
             qinv_a: vec![0.0; n],
             qinvu,
             cpi: vec![0.0; n],
+            qvis: vec![0.0; n],
             sig: vec![0.0; n],
             dij: None,
         })
@@ -316,7 +319,15 @@ impl InviscidSolution {
             self.qinvu[c].extend_from_slice(&qw[c]);
         }
         self.sig.resize(n + wake.len(), 0.0);
+        self.qvis.resize(n + wake.len(), 0.0);
         self.qiset();
+    }
+
+    /// Surface vorticity from the viscous speed. Port of XFOIL `GAMQV`.
+    pub fn gamqv(&mut self) {
+        let n = self.n();
+        self.gam[..n].copy_from_slice(&self.qvis[..n]);
+        self.gam_a[..n].copy_from_slice(&self.qinv_a[..n]);
     }
 
     /// Source influence matrix dQtan/dσ for airfoil and wake. Port of XFOIL `QDCALC`.

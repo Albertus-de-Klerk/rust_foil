@@ -1,7 +1,7 @@
 //! Compressibility state and force integration. Port of XFOIL `MRCL`, `COMSET`, `CPCALC`,
 //! `CLCALC`.
 
-use crate::fortran::powi;
+use crate::fortran::{pow, powi};
 use crate::settings::{FlowConditions, MachType, ReynoldsType};
 
 /// Freestream state for the current CL (`MINF`, `REINF`, Karman–Tsien terms, sonic values).
@@ -93,8 +93,10 @@ impl Compressibility {
             self.qstar = 999.0;
         } else {
             self.cpstar = 2.0 / (gamma * powi(minf, 2))
-                * (((1.0 + 0.5 * gamm1 * powi(minf, 2)) / (1.0 + 0.5 * gamm1)).powf(gamma / gamm1)
-                    - 1.0);
+                * (pow(
+                    (1.0 + 0.5 * gamm1 * powi(minf, 2)) / (1.0 + 0.5 * gamm1),
+                    gamma / gamm1,
+                ) - 1.0);
             self.qstar =
                 qinf / minf * ((1.0 + 0.5 * gamm1 * powi(minf, 2)) / (1.0 + 0.5 * gamm1)).sqrt();
         }
