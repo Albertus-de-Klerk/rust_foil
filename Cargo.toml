@@ -1,0 +1,34 @@
+[workspace]
+resolver = "3"
+members = ["crates/qfoil-core", "crates/qfoil-cli", "crates/qfoil-golden"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "GPL-2.0-or-later"
+authors = ["Albertus de Klerk <berti.frans14@gmail.com>"]
+description = "Rust port of QFOIL 0.9 (XFOIL 6.99 derivative) for airfoil polar analysis"
+
+[workspace.dependencies]
+qfoil-core = { path = "crates/qfoil-core" }
+qfoil-golden = { path = "crates/qfoil-golden" }
+thiserror = "2"
+approx = "0.5"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+# Faithful ports keep Fortran's explicit index loops (FP-order parity); iterator
+# rewrites happen in the post-parity refactor commits.
+needless_range_loop = "allow"
+too_many_arguments = "allow"
+
+[profile.release]
+debug = 1
+
+[profile.test]
+opt-level = 2

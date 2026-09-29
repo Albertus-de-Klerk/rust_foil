@@ -1,0 +1,18 @@
+PLOP
+G F
+
+LOAD foil.dat
+OPER
+VPAR
+N 9
+
+ITER 100
+VISC 1e5
+PACC
+pol.txt
+
+ALFA 5.0
+CPWR cp.txt
+DUMP bl.txt
+
+QUIT

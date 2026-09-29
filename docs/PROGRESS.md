@@ -35,10 +35,24 @@
 
 Unconverged α are listed per case by `tools/golden_summary.sh`.
 
+### Phase 2 (in progress)
+
+Workspace: `crates/qfoil-core` (library, no I/O), `crates/qfoil-cli` (binary `qfoil`, stub),
+`crates/qfoil-golden` (test support: dump/polar readers in `BTreeMap`s, ULP comparison and the
+`assert_golden!` macro). Lints: `unsafe_code = forbid`, `missing_docs = warn`, clippy `-D warnings`.
+
+| step | module(s) | routines | parity |
+|---|---|---|---|
+| 1 | `spline`, `geometry` (`dat`, `naca`) | SPLINE, SPLIND, SEGSPL(D), TRISOL, SEVAL, DEVAL, D2VAL, CURV(S), SINVRT, SCALC; AREAD/GETFLT, LOAD (orientation), NACA/NACA4/NACA5, LEFIND | **bit-identical** (0 ULP): buffer XB, YB, SB, XBP, YBP for NACA 0012, 4412, E387, DU 91-W2-250 |
+| 2 | `paneling` | PANGEN, ABCOPY, TECALC (geometry), NCALC, APCALC | **bit-identical** (0 ULP): X, Y, S, XP, YP, NX, NY, APANEL, SLE, LE, TE, CHORD, ANTE, ASTE, DSTE |
+
+Not ported (no effect on results): GEOPAR, NORM (`LNORM` is off by default), SPLINA, SPLNXY, CANG.
+
 ## Next
 
-Phase 2, step 1: create the Cargo workspace (`qfoil-core`, `qfoil-cli`) and port `spline` +
-`geometry` (+ NACA4/5, .dat parsing), tested against `dumps/*/…_pangen.txt` (XB, YB, SB, X, Y, S, XP, YP).
+Phase 2, step 3: inviscid, i.e. `linalg` (LUDCMP, BAKSUB, GAUSS), PSILIN, PSWLIN, GGCALC, QISET,
+CLCALC, CPCALC, COMSET, MRCL, SPECAL, plus XYWAKE, QWCALC, QDCALC. Tests: `aij_raw`, `ggcalc`,
+`specal`, `xywake`, `qdcalc` records.
 
 ## Decisions (2026-09-29)
 

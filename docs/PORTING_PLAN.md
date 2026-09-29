@@ -263,7 +263,7 @@ All are marked `C---QFOIL MOD---` in the source. Each was confirmed by `diff -u 
 | D10 | xfoil.f:1191–1193, 1208–1231 | CDCALC | if `u = Ue_wake/Q∞ ≤ 1`: `H1 = 3.15 + 1.72/(H−1)`, `θ_tot = θ·[1 + (1−u)(u(GWAKE·H1 − 1) − 1)]`, `CD = 2θ_tot·u^((5+H)/2)`; else original Squire–Young | ✔doc ✔th | `wake::drag::cdcalc` |
 | D11 | BLPAR.INC:12–16; xbl.f:1601–1603 | /BLPAR/, BLPINI | new `GWAKE`, default 0.40 | ✔doc ✔th | `BlParams::gwake` |
 | D12 | xoper.f:2516–2535, 2567–2569, 2721–2730 | VPAR | display GWAKE; `GW r` command | ✔doc | `Settings` + CLI `--gwake` |
-| D13 | XFOIL.INC:23–38 | — | `IQX=1400, NAX=1200` (upstream 370/800). Also present in bundled baseline. | ✔th | Rust uses `Vec`s. Enforce `N ≤ IQX−6`-equivalent limits only as validation errors |
+| D13 | XFOIL.INC:23–38 | — | `IQX=1400, NAX=1200` (upstream 370/800). Also present in bundled baseline. **Numerical side effect:** `NACA` uses `NSIDE = IQX/3` points per side, so QFoil's NACA buffer has 931 points (stock XFOIL: 245), and the PANGEN input and thus the panels differ from stock XFOIL. | ✔th | Rust uses `Vec`s; `limits::IQX` reproduces NSIDE and the input limits (ABCOPY ≤ IQX−5, PANGEN ≤ IQX−1) as errors |
 | D14 | xfoil.f:40–63; xoper.f:3109–3145 | banner; VISCAL `.bl` dump | cosmetic / disabled debug output | ✔doc | not ported |
 
 **Behavioural consequence of D9 (important for Phase 4).** Each α starts cold: `MRCHUE` re-initialises θ, δ* and Ctau from Thwaites at the stagnation point. What still carries over from the previous α in a sweep:

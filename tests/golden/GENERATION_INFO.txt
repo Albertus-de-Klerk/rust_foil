@@ -1,4 +1,4 @@
-generated: 2026-09-29T12:19:21Z
+generated: 2026-09-29T12:28:02Z
 quick: 0
 itmax: 100  ncrit: 9
 --- qfoil
@@ -20,4 +20,4 @@ FFLAGS: -O2 -std=legacy -fautomatic -finit-real=snan -finit-integer=-99999999 -f
 LDFLAGS: -flto
 patches: /home/albertus/Documents/Projects/rust_foil/tools/patches/dump
 --- shipped: 724d2c0d7b7356dc3fa1cae2a758aeae5cebfc91c18c060ff5a32925a4516d20
---- patch: d03dfd5cde6e7e582d5b93562c83ef277a568ee574f8c89ecb136d7dc8dc2cc4
+--- patch: e19f7458bc401b200e09e5389361ea3459ee35eab0d7680543aad23fe44e5622

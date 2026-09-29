@@ -37,7 +37,7 @@ Re ∈ {1e5, 1e6, 5e6}; α = −10 … 20 step 0.5 (61 points). 915 points in to
 | `polars/<case>_re<Re>.pol` | Converged points in QFoil's own polar-file format (from `PACC`), concatenated in α order. This is the format the CLI must reproduce. |
 | `points/<case>_re<Re>/a<α>/` | For α ∈ {0, 5, 10, 15}: `cp.txt` (CPWR), `bl.txt` (DUMP), `viscal_end.txt` (full-precision BL arrays incl. CTAU, see the format below), `stdout_tail.log`. |
 | `dumps/<name>/NNNNN_<tag>.txt` | **Gitignored** (~180 MB, regenerate with `tools/gen_golden.sh`). Used by `cargo test -- --ignored`. Full intermediate state for selected points: `pangen`, `aij_raw`, `ggcalc`, `specal`, `xywake`, `qdcalc`, `viscal_init`, `mrchue`, `setbl`/`blsolv`/`update`/`iter` per Newton iteration, `viscal_end`, `final`. NNNNN is call order. `*_vm` holds `setbl` with the full VM block. |
-| `fixtures/<name>/` | **Committed**, trimmed copies of two full dumps (naca0012 and naca4412, Re 1e6, α 5): all single-stage records plus Newton iterations 1, 2 and last. Used by the default `cargo test`. |
+| `fixtures/<name>/` | **Committed**, trimmed copies of three full dumps (naca0012 and naca4412 at Re 1e6, α 5; e387 at Re 1e5, α 5, the `LOAD`/ABCOPY path): all single-stage records plus Newton iterations 1, 2 and last. Used by the default `cargo test`. |
 | `checks.tsv` | Per point: printed iterations, `VISCAL: Convergence failed` count, NaN line count, and three bit-identity checks: plain vs dump build stdout, dump vs `-fautomatic` build final record (SAVE-dependence probe), plain build vs QBlade's shipped `QFoil` stdout. |
 
 ## Dump record format

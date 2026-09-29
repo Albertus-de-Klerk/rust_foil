@@ -12,8 +12,8 @@ diff -ruN a/bin/Makefile b/bin/Makefile
  PXPLOTOBJ = pxplot.o plutil.o gui.o
 diff -ruN a/src/dump.f b/src/dump.f
 --- a/src/dump.f	1970-01-01 01:00:00.000000000 +0100
-+++ b/src/dump.f	2026-09-28 21:26:19.717126408 +0100
-@@ -0,0 +1,258 @@
++++ b/src/dump.f	2026-09-29 13:20:32.257216813 +0100
+@@ -0,0 +1,260 @@
 +C=====================================================================
 +C     qfoil-rs golden-dump instrumentation.  NOT part of QFoil.
 +C
@@ -67,7 +67,7 @@ diff -ruN a/src/dump.f b/src/dump.f
 +      CALL DPI(LU,'NW',NW)
 +      CALL DPS(LU,'ALFA',ALFA)
 +C
-+      IF(TAG.EQ.'pangen') THEN
++      IF(TAG.EQ.'pangen' .OR. TAG.EQ.'abcopy') THEN
 +       ISHARP = 0
 +       IF(SHARP) ISHARP = 1
 +       CALL DPI(LU,'SHARP',ISHARP)
@@ -92,6 +92,8 @@ diff -ruN a/src/dump.f b/src/dump.f
 +       CALL DPR(LU,'XB',XB,NB)
 +       CALL DPR(LU,'YB',YB,NB)
 +       CALL DPR(LU,'SB',SB,NB)
++       CALL DPR(LU,'XBP',XBP,NB)
++       CALL DPR(LU,'YBP',YBP,NB)
 +C
 +      ELSEIF(TAG.EQ.'aij_raw') THEN
 +C----- before LU factorisation: GAMU holds the right-hand sides
@@ -301,6 +303,17 @@ diff -ruN a/src/xfoil.f b/src/xfoil.f
 +      CALL QDUMP('pangen',0)
        RETURN
        END ! PANGEN
+ 
+diff -ruN a/src/xgdes.f b/src/xgdes.f
+--- a/src/xgdes.f	2026-09-28 21:21:46.722771496 +0100
++++ b/src/xgdes.f	2026-09-29 13:21:19.192909414 +0100
+@@ -1031,6 +1031,7 @@
+  1200 FORMAT(/' Current airfoil nodes set from buffer airfoil nodes (',
+      &        I4,' )')
+ C
++      CALL QDUMP('abcopy',0)
+       RETURN
+       END ! ABCOPY
  
 diff -ruN a/src/xoper.f b/src/xoper.f
 --- a/src/xoper.f	2026-09-28 21:21:46.722930961 +0100

@@ -144,7 +144,7 @@ full_dump() {
 # Trimmed copies of selected full dumps: every single-stage record plus the Newton
 # iterations 1, 2 and last (setbl/blsolv/update/iter). The default `cargo test` uses these.
 # Full dumps (tests/golden/dumps/, gitignored) serve the `--ignored` tests.
-FIXTURES=(naca0012_re1e6_a5.0 naca4412_re1e6_a5.0)
+FIXTURES=(naca0012_re1e6_a5.0 naca4412_re1e6_a5.0 e387_re1e5_a5.0)
 make_fixtures() {
   local p src dst f tag k n
   for p in "${FIXTURES[@]}"; do
