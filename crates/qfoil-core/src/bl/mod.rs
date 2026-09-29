@@ -7,6 +7,7 @@
 //! `IS = 1`), side 1 the lower surface plus wake.
 
 pub mod closure;
+pub mod coupling;
 pub mod equations;
 pub mod march;
 pub mod station;
@@ -42,6 +43,8 @@ pub struct Side {
     pub dis: Vec<f64>,
     /// Equilibrium √Cτ.
     pub ctq: Vec<f64>,
+    /// Slip-velocity factor 1.6/(1+Us), output only (`USLP`).
+    pub uslp: Vec<f64>,
     /// ±1: sign relating BL speed and panel tangential speed.
     pub vti: Vec<f64>,
     /// Panel node of each station (0-based, airfoil then wake nodes).
@@ -68,10 +71,53 @@ impl Side {
             tau: z(),
             dis: z(),
             ctq: z(),
+            uslp: z(),
             vti: z(),
             ipan: vec![0; n],
             isys: vec![0; n],
         }
+    }
+}
+
+/// The station arrays UPDATE mirrors from the lower wake to the upper wake.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct StationValues {
+    ctau: f64,
+    thet: f64,
+    dstr: f64,
+    uedg: f64,
+    tau: f64,
+    dis: f64,
+    ctq: f64,
+    delt: f64,
+    tstr: f64,
+}
+
+impl Side {
+    pub(crate) fn clone_station(&self, i: usize) -> StationValues {
+        StationValues {
+            ctau: self.ctau[i],
+            thet: self.thet[i],
+            dstr: self.dstr[i],
+            uedg: self.uedg[i],
+            tau: self.tau[i],
+            dis: self.dis[i],
+            ctq: self.ctq[i],
+            delt: self.delt[i],
+            tstr: self.tstr[i],
+        }
+    }
+
+    pub(crate) fn set_station(&mut self, i: usize, v: &StationValues) {
+        self.ctau[i] = v.ctau;
+        self.thet[i] = v.thet;
+        self.dstr[i] = v.dstr;
+        self.uedg[i] = v.uedg;
+        self.tau[i] = v.tau;
+        self.dis[i] = v.dis;
+        self.ctq[i] = v.ctq;
+        self.delt[i] = v.delt;
+        self.tstr[i] = v.tstr;
     }
 }
 
@@ -102,4 +148,8 @@ pub struct BoundaryLayer {
     pub nsys: usize,
     /// "Dead air" thickness in the wake behind a blunt TE (`WGAP`, NW).
     pub wgap: Vec<f64>,
+    /// Transition x/c per side (`XOCTR`, set by SETBL).
+    pub xoctr: [f64; 2],
+    /// Transition y/c per side (`YOCTR`).
+    pub yoctr: [f64; 2],
 }

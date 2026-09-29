@@ -340,11 +340,7 @@ impl BoundaryLayer {
 
                     // eliminate absurd transients
                     if ibl >= itran {
-                        // min/max, not clamp: keep Fortran MIN/MAX behaviour for NaN
-                        #[allow(clippy::manual_clamp)]
-                        {
-                            cti = cti.min(0.30).max(0.0000001);
-                        }
+                        cti = cti.min(0.30).max(0.0000001);
                     }
                     let hklim = if ibl <= iblte { 1.02 } else { 1.00005 };
                     let msq = edge_msq(k, uei);
@@ -596,11 +592,7 @@ impl BoundaryLayer {
 
                     // eliminate absurd transients
                     if ibl >= itran {
-                        // min/max, not clamp: keep Fortran MIN/MAX behaviour for NaN
-                        #[allow(clippy::manual_clamp)]
-                        {
-                            cti = cti.min(0.30).max(0.0000001);
-                        }
+                        cti = cti.min(0.30).max(0.0000001);
                     }
                     let hklim = if ibl <= iblte { 1.02 } else { 1.00005 };
                     let msq = edge_msq(k, uei);

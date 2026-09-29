@@ -45,6 +45,7 @@ Workspace: `crates/qfoil-core` (library, no I/O), `crates/qfoil-cli` (binary `qf
 |---|---|---|---|
 | 1 | `spline`, `geometry` (`dat`, `naca`) | SPLINE, SPLIND, SEGSPL(D), TRISOL, SEVAL, DEVAL, D2VAL, CURV(S), SINVRT, SCALC; AREAD/GETFLT, LOAD (orientation), NACA/NACA4/NACA5, LEFIND | **bit-identical** (0 ULP): buffer XB, YB, SB, XBP, YBP for NACA 0012, 4412, E387, DU 91-W2-250 |
 | 2 | `paneling` | PANGEN, ABCOPY, TECALC (geometry), NCALC, APCALC | **bit-identical** (0 ULP): X, Y, S, XP, YP, NX, NY, APANEL, SLE, LE, TE, CHORD, ANTE, ASTE, DSTE |
+| 6 | `newton` (NewtonSystem), `bl::coupling` | SETBL, BLSOLV, UPDATE◆ (D6–D8), UESET; STFIND, IBLPAN, XICALC (incl. WGAP), IBLSYS, UICALC, QVFUE, STMOVE; QFoil VISCAL initialisation (D9) | **bit-identical** (0 ULP): BL set-up from scratch vs `viscal_init` (IST, SST, pointers, ξ, WGAP, UINV, clamped UEDG); first Newton iteration: SETBL VA/VB/VDEL, full VM (~10⁵ entries), derived arrays; BLSOLV solution; UPDATE BL arrays, CL, RLX, RMSBL, RMXBL, on 7 runs |
 | 5 | `bl::station`, `bl::equations`, `bl::march`, `bl` (BoundaryLayer, Side) | BLPRV, BLKIN, BLVAR, BLMID, BLDIF◆ (D1–D3: tanh Kc(Hk), SCC_HKA Jacobian, wake ALD), TRCHEK2, TRDIF, BLSYS, TESYS, MRCHUE, MRCHDU◆ (D5), XIFSET, DSLIM | **bit-identical** (0 ULP): all BL arrays after MRCHUE (θ, δ*, Cτ/N, Ue, mass, τ, D, Cτeq, δ, θ*, ITRAN, XSSITR), primary arrays after MRCHDU, on 7 runs incl. transition, separation (inverse mode) and wake. Station Jacobians VS1/VS2 match finite differences for laminar, wake and turbulent intervals, except the upstream S15 approximation, which is isolated and verified |
 | 4 | `bl::closure`, `bl::transition`, `settings::BlParams` | HKIN, HCT, HSL, HST◆ (QFoil HSMIN/DHSINF), CFL, CFT, DIL, DILW, DIT; DAMPL, DAMPL2, AXSET; BLPINI | **bit-identical** (0 ULP) on all 6,331 rows of the Fortran reference table (`tools/fdrivers/closures.f`, every branch); every analytic partial matches central differences (rel 1e-5), except DILW ∂/∂HK, an upstream sign error (S14) |
 | 3 | `linalg`, `inviscid` (`influence`, `forces`), `wake`, `settings`, `operating` | LUDCMP, BAKSUB, GAUSS; PSILIN, PSWLIN; GGCALC (incl. sharp-TE branch, E387), SPECAL, QISET, TECALC (strengths), MRCL, COMSET, CPCALC, CLCALC; XYWAKE, SETEXP, ATANC, QWCALC, QDCALC | **bit-identical** (0 ULP): AIJ, BIJ, LU factors and pivots, GAMU, GAM, QINV, CPI, CL, CM, CDP, wake x/y/s/normals/angles, QINVU, DIJ, for NACA 0012, 4412, E387 (fixtures) and DU 91-W2-250, NACA 0012 α 0/15, NACA 4412 α 15 (`--ignored`) |
@@ -54,9 +55,10 @@ PSILIN's `GEOLIN` branch (inverse design) and ground-effect images (`LIMAGE`, no
 
 ## Next
 
-Phase 2, step 6: Newton system, i.e. `newton` (SETBL assembly incl. its station loop that rewrites
-TAU/DIS/CTQ/DELT/TSTR/XSSITR, BLSOLV block solver, UPDATE◆ with D6–D8), plus UESET, IBLSYS.
-Tests: `setbl` (VA, VB, VDEL, full VM in `*_vm`), `blsolv`, `update` records.
+Phase 2, steps 7–8: the VISCAL iteration loop (QVFUE, GAMQV, STMOVE, CLCALC, CDCALC◆ with the
+GWAKE drag, D10), convergence test, single-point driver, polar sweep, and the CLI. Tests: every
+`iter` record (fixtures: iterations 1, 2, last), the `final`/`viscal_end` records, then the full
+915-point golden polars against the acceptance criteria.
 
 ## Decisions (2026-09-29)
 

@@ -26,6 +26,8 @@ missing_debug_implementations = "warn"
 # rewrites happen in the post-parity refactor commits.
 needless_range_loop = "allow"
 too_many_arguments = "allow"
+# Fortran MAX/MIN pairs are kept as f64::max/min: clamp differs for NaN inputs.
+manual_clamp = "allow"
 
 [profile.release]
 debug = 1

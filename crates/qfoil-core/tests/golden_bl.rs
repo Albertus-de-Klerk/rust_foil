@@ -39,6 +39,7 @@ fn bl_from_dump(d: &Dump) -> BoundaryLayer {
             tau: r("TAU"),
             dis: r("DIS"),
             ctq: r("CTQ"),
+            uslp: vec![0.0; r("CTQ").len()],
             vti: r("VTI"),
             ipan: idx("IPAN"),
             isys: idx("ISYS"),
@@ -57,6 +58,8 @@ fn bl_from_dump(d: &Dump) -> BoundaryLayer {
         sst_gp: 0.0,
         nsys: d.int("NSYS") as usize,
         wgap: d.reals("WGAP").to_vec(),
+        xoctr: [d.reals("XOCTR")[0], d.reals("XOCTR")[1]],
+        yoctr: [0.0, 0.0],
     }
 }
 

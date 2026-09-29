@@ -11,6 +11,7 @@ pub mod geometry;
 pub mod inviscid;
 pub mod limits;
 pub mod linalg;
+pub mod newton;
 pub mod operating;
 pub mod paneling;
 pub mod settings;
