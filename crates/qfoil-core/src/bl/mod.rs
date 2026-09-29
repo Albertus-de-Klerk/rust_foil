@@ -152,4 +152,6 @@ pub struct BoundaryLayer {
     pub xoctr: [f64; 2],
     /// Transition y/c per side (`YOCTR`).
     pub yoctr: [f64; 2],
+    /// Fractional panel index of transition per side (`TINDEX`, the polar file's `Itr`).
+    pub tindex: [f64; 2],
 }

@@ -15,6 +15,7 @@ qfoil-core = { path = "crates/qfoil-core" }
 qfoil-golden = { path = "crates/qfoil-golden" }
 thiserror = "2"
 approx = "0.5"
+clap = { version = "4", features = ["derive"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

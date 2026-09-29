@@ -75,6 +75,7 @@ impl BoundaryLayer {
             wgap: vec![0.0; wake.len()],
             xoctr: [1.0, 1.0],
             yoctr: [0.0, 0.0],
+            tindex: [0.0, 0.0],
         };
         bl.iblpan(pan.len(), wake.len());
         bl.xicalc(pan, wake);

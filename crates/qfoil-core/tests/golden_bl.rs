@@ -60,6 +60,7 @@ fn bl_from_dump(d: &Dump) -> BoundaryLayer {
         wgap: d.reals("WGAP").to_vec(),
         xoctr: [d.reals("XOCTR")[0], d.reals("XOCTR")[1]],
         yoctr: [0.0, 0.0],
+        tindex: [0.0, 0.0],
     }
 }
 

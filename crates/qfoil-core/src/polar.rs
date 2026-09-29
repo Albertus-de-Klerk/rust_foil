@@ -148,6 +148,8 @@ pub struct PolarPoint {
     pub cm: f64,
     /// Transition x/c on the top and bottom surface (1 if laminar to the TE).
     pub xtr: [f64; 2],
+    /// Fractional panel index of transition, top and bottom (the polar file's `Itr`).
+    pub itr: [f64; 2],
     /// Convergence.
     pub status: PointStatus,
 }
@@ -212,6 +214,7 @@ impl PreparedAirfoil {
                 cdf: 0.0,
                 cm: op.forces.cm,
                 xtr: [1.0, 1.0],
+                itr: [0.0, 0.0],
                 status: PointStatus::Inviscid,
             };
         };
@@ -234,6 +237,7 @@ impl PreparedAirfoil {
             cdf: op.cdf,
             cm: op.forces.cm,
             xtr: res.bl.xoctr,
+            itr: res.bl.tindex,
             status,
         }
     }

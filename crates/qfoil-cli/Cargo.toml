@@ -13,6 +13,10 @@ path = "src/main.rs"
 
 [dependencies]
 qfoil-core.workspace = true
+clap.workspace = true
+
+[dev-dependencies]
+qfoil-golden.workspace = true
 
 [lints]
 workspace = true

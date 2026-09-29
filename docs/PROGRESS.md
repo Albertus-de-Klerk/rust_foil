@@ -45,6 +45,7 @@ Workspace: `crates/qfoil-core` (library, no I/O), `crates/qfoil-cli` (binary `qf
 |---|---|---|---|
 | 1 | `spline`, `geometry` (`dat`, `naca`) | SPLINE, SPLIND, SEGSPL(D), TRISOL, SEVAL, DEVAL, D2VAL, CURV(S), SINVRT, SCALC; AREAD/GETFLT, LOAD (orientation), NACA/NACA4/NACA5, LEFIND | **bit-identical** (0 ULP): buffer XB, YB, SB, XBP, YBP for NACA 0012, 4412, E387, DU 91-W2-250 |
 | 2 | `paneling` | PANGEN, ABCOPY, TECALC (geometry), NCALC, APCALC | **bit-identical** (0 ULP): X, Y, S, XP, YP, NX, NY, APANEL, SLE, LE, TE, CHORD, ANTE, ASTE, DSTE |
+| CLI | `qfoil-cli` (binary `qfoil`, clap) | POLWRIT (polar file writer, Fortran `Fw.d` formatting), TINDEX (Itr columns, in SETBL) | **all 15 golden polar files byte-identical** to QFoil's `PACC` output (`cargo test --release -p qfoil-cli -- --ignored`) |
 | 7–8 | `viscous` (VISCAL loop, CDCALC◆ D10), `polar` (public API `analyse_polar`, `PreparedAirfoil`) | VISCAL (QVFUE, GAMQV, STMOVE, CLCALC, CDCALC with GWAKE), ALFA driver | **all 915 golden points bit-identical, 0 convergence-flag mismatches** (`cargo test --release --test golden_polars -- --ignored`), incl. non-converged and deep-stall points. Every dumped Newton iteration of 8 full-dump runs bit-identical |
 | 6 | `newton` (NewtonSystem), `bl::coupling` | SETBL, BLSOLV, UPDATE◆ (D6–D8), UESET; STFIND, IBLPAN, XICALC (incl. WGAP), IBLSYS, UICALC, QVFUE, STMOVE; QFoil VISCAL initialisation (D9) | **bit-identical** (0 ULP): BL set-up from scratch vs `viscal_init` (IST, SST, pointers, ξ, WGAP, UINV, clamped UEDG); first Newton iteration: SETBL VA/VB/VDEL, full VM (~10⁵ entries), derived arrays; BLSOLV solution; UPDATE BL arrays, CL, RLX, RMSBL, RMXBL, on 7 runs |
 | 5 | `bl::station`, `bl::equations`, `bl::march`, `bl` (BoundaryLayer, Side) | BLPRV, BLKIN, BLVAR, BLMID, BLDIF◆ (D1–D3: tanh Kc(Hk), SCC_HKA Jacobian, wake ALD), TRCHEK2, TRDIF, BLSYS, TESYS, MRCHUE, MRCHDU◆ (D5), XIFSET, DSLIM | **bit-identical** (0 ULP): all BL arrays after MRCHUE (θ, δ*, Cτ/N, Ue, mass, τ, D, Cτeq, δ, θ*, ITRAN, XSSITR), primary arrays after MRCHDU, on 7 runs incl. transition, separation (inverse mode) and wake. Station Jacobians VS1/VS2 match finite differences for laminar, wake and turbulent intervals, except the upstream S15 approximation, which is isolated and verified |
@@ -56,10 +57,10 @@ PSILIN's `GEOLIN` branch (inverse design) and ground-effect images (`LIMAGE`, no
 
 ## Next
 
-Phase 2, steps 7–8: the VISCAL iteration loop (QVFUE, GAMQV, STMOVE, CLCALC, CDCALC◆ with the
-GWAKE drag, D10), convergence test, single-point driver, polar sweep, and the CLI. Tests: every
-`iter` record (fixtures: iterations 1, 2, last), the `final`/`viscal_end` records, then the full
-915-point golden polars against the acceptance criteria.
+* Phase 2 wrap-up: idiomatic refactor commit (behaviour-preserving, guarded by the bit-parity tests).
+* Phase 3: `docs/VALIDATION.md` with the per-case table and `plotters` plots. Parity is already
+  exact, so every acceptance criterion holds with zero error.
+* Phase 4: rayon over α (points are independent), criterion benchmarks against the reference binary.
 
 ## Decisions (2026-09-29)
 

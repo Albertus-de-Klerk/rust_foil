@@ -317,6 +317,7 @@ impl BoundaryLayer {
         let ule2_a = s1.uinv_a[1];
 
         let mut sys = NewtonSystem::zeros(nsys);
+        self.tindex = [0.0, 0.0];
         let (mut u1_m, mut d1_m, mut u2_m, mut d2_m) = (
             vec![0.0; nsys],
             vec![0.0; nsys],
@@ -517,6 +518,18 @@ impl BoundaryLayer {
                     k.wake = true;
                     k.blvar(Regime::Wake);
                     k.blmid(Regime::Wake);
+                }
+
+                // fractional transition panel index (Fortran IST, ITRAN are 1-based:
+                // IST-ITRAN+3 -> ist-itran+3, IST+ITRAN-2 -> ist+itran)
+                if ibl == self.itran[is] && k.s2.x > k.s1.x {
+                    let frac = (k.xt.xt - k.s1.x) / (k.s2.x - k.s1.x);
+                    let (ist, itr) = (self.ist as i64, self.itran[is] as i64);
+                    self.tindex[is] = if is == 0 {
+                        (ist - itr + 3) as f64 - frac
+                    } else {
+                        (ist + itr) as f64 + frac
+                    };
                 }
 
                 u1_m.copy_from_slice(&u2_m);
